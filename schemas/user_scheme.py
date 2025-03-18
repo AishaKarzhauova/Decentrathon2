@@ -1,7 +1,9 @@
 from sqlalchemy import Column, Integer, String, Enum
 from sqlalchemy.orm import relationship
-from db import GlobalBase
+# from db import GlobalBase
 import enum
+from schemas.base import GlobalBase
+
 
 class RoleEnum(str, enum.Enum):
     user = "user"

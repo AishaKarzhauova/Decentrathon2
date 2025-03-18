@@ -1,11 +1,22 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import sessionmaker
+from schemas.base import GlobalBase
 
-DATABASE_URL = "postgresql://postgres:12345qwert@localhost:5432/blockchain_voting"
+# Ensure all models are imported
+from schemas.poll_scheme import Poll
+from schemas.user_scheme import User
+from schemas.vote_history import VoteHistory
+from schemas.proposed_poll_scheme import ProposedPoll
+from schemas.token_request_scheme import TokenRequest
 
-engine = create_engine(DATABASE_URL)
+DATABASE_URL = "postgresql://aishakarzhauova:795430a@localhost:5432/blockchain_voting"
+engine = create_engine(DATABASE_URL, echo=True)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+print("Creating tables...")
+GlobalBase.metadata.create_all(engine)
+print("Tables created successfully!")
 
 def get_db():
     db = SessionLocal()
@@ -13,7 +24,3 @@ def get_db():
         yield db
     finally:
         db.close()
-
-
-class GlobalBase(DeclarativeBase):
-    pass

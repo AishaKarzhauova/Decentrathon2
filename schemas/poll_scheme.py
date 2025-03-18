@@ -1,7 +1,8 @@
 from sqlalchemy import Column, Integer, String, Boolean, ARRAY, Text
 from sqlalchemy.orm import relationship
 
-from db import GlobalBase
+# from db import GlobalBase
+from schemas.base import GlobalBase
 
 
 class Poll(GlobalBase):

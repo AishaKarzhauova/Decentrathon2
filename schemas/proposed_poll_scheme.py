@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, ARRAY, Text
-from db import GlobalBase
+# from db import GlobalBase
+from schemas.base import GlobalBase
 
 class ProposedPoll(GlobalBase):
     __tablename__ = "proposed_polls"
