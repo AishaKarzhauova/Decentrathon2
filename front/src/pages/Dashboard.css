@@ -2,34 +2,42 @@
 .dashboard-container {
     display: flex;
     height: 100vh;
-    background: #1E2337; /* Dark Theme */
+    width: 100vw;           /* ✅ Make sure full width is used */
+    overflow: hidden;
 }
 
 /* Sidebar */
-.sidebar {
-    width: 350px;
-    background-color: #14192D;
+
+.sidebar-scroll {
+    overflow-y: auto;
+    flex-grow: 1;
     padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    position: relative;
-    overflow-y: auto; /* Enables scrolling if necessary */
-    max-height: 100vh;
 }
 
+.sidebar {
+    width: 380px;
+    background-color: #14192D;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    flex-shrink: 0;
+    height: 100vh;
+}
 /* Logo - Properly Positioned */
 .logo {
     width: 50px;
-    position: absolute;
-    top: 10px;
-    left: 10px;
+    align-self: flex-start;
 }
 
 /* User Icon - Always Visible */
 .user-icon {
     width: 150px;
     height: 150px;
+    min-width: 150px;
+    min-height: 150px;
     border-radius: 50%;
     background-color: #22284A;
     display: flex;
@@ -38,9 +46,8 @@
     color: white;
     font-size: 36px;
     font-weight: bold;
-    margin: 50px 0 10px;
+    margin: 20px 0;
 }
-
 /* User Info Button */
 .user-info-button {
     background: linear-gradient(90deg, #6e8efb, #a777e3);
@@ -65,16 +72,16 @@
 /* User Info - Smooth Expanding Animation */
 .user-info-container {
     width: 100%;
-    overflow: hidden;
-    transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out;
-    max-height: 0;
+    transition: opacity 0.3s ease-in-out;
     opacity: 0;
+    height: 0;
 }
 
 .user-info-container.show {
-    max-height: 300px; /* Adjust based on content */
     opacity: 1;
+    height: auto;
 }
+
 
 /* User Info Text */
 .user-info {
@@ -97,7 +104,6 @@
     cursor: pointer;
     width: 90%;
     text-align: center;
-    transition: 0.3s;
 }
 
 .sidebar-button:hover {
@@ -107,12 +113,10 @@
 /* Main Content (Right Side) */
 .main-content {
     flex: 1;
-    background: #1E2337;
+    background-color: #1E2337; /* ✅ Fix white screen */
     padding: 40px;
     color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    overflow-y: auto;
 }
 
 /* Search Bar */
@@ -148,3 +152,5 @@
 .gradient-button:hover {
     opacity: 0.8;
 }
+
+
