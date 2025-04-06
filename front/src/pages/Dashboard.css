@@ -2,7 +2,7 @@
 .dashboard-container {
     display: flex;
     height: 100vh;
-    width: 100vw;           /* ✅ Make sure full width is used */
+    width: 100%; /* ✅ Make sure full width is used */
     overflow: hidden;
 }
 
@@ -112,30 +112,64 @@
 
 /* Main Content (Right Side) */
 .main-content {
-    flex: 1;
-    background-color: #1E2337; /* ✅ Fix white screen */
-    padding: 40px;
-    color: white;
-    overflow-y: auto;
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  background-color: #ffffff;
+  padding: 50px 40px 40px 40px; /* ✅ more padding on top */
+  color: #333;
+  border-top-left-radius: 20px;
+  box-sizing: border-box;
 }
+
+.sidebar.collapsed {
+    width: 0;
+}
+
+.sidebar {
+  width: 300px;
+  transition: width 0.3s ease;
+}
+
+.sidebar.collapsed + .collapse-btn {
+  left: 0; /* move button to screen edge */
+}
+
+.collapse-btn {
+  position: absolute;
+  top: 20px;
+  left: 300px; /* aligns to expanded sidebar edge */
+  z-index: 10;
+  background-color: #6e8efb;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 0 5px 5px 0;
+  cursor: pointer;
+  transition: left 0.3s ease;
+}
+
 
 /* Search Bar */
 .search-container {
-    display: flex;
-    gap: 10px;
-    width: 100%;
-    max-width: 600px;
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 30px; /* ✅ separates it from chart */
+  z-index: 1;
+  position: relative;
 }
 
 .input-field {
-    flex-grow: 1;
-    padding: 12px;
-    border-radius: 20px;
-    border: none;
-    outline: none;
-    background: white;
-    font-size: 16px;
-    color: #333;
+  flex-grow: 1;
+  padding: 12px;
+  border-radius: 20px;
+  border: 2px solid #ccc; /* ✅ clearly visible border */
+  outline: none;
+  background: white;
+  font-size: 16px;
+  color: #333;
 }
 
 .gradient-button {
