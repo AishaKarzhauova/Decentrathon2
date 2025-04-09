@@ -35,6 +35,52 @@ const Dashboard = () => {
 
   const [mostVotedPoll, setMostVotedPoll] = useState(null);
 
+  const [allOpenPolls, setAllOpenPolls] = useState([]);
+
+  useEffect(() => {
+    const fetchOpenPolls = async () => {
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/polls/list/onchain/active");
+        setAllOpenPolls(response.data);
+        setLatestPolls(response.data.slice(0, 5));
+
+        const sorted = [...response.data].sort((a, b) => b.vote_count - a.vote_count);
+        setMostVotedPoll(sorted[0]);
+      } catch (error) {
+        console.error("Failed to fetch open polls:", error);
+      }
+    };
+    fetchOpenPolls();
+  }, []);
+
+    useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSearchActive(false);
+      setPolls([]);
+      return;
+    }
+
+    const filtered = allOpenPolls.filter(poll =>
+      poll.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    setPolls(filtered);
+    setSearchActive(true);
+  }, [searchTerm, allOpenPolls]);
+
+  const handleSearch = () => {
+    if (!searchTerm.trim()) {
+      setMessage("Enter a voting name!");
+      return;
+    }
+
+    const filtered = allOpenPolls.filter(poll =>
+      poll.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setPolls(filtered);
+    setSearchActive(true);
+  };
+
 useEffect(() => {
   const fetchMostVoted = async () => {
     try {
@@ -242,58 +288,69 @@ useEffect(() => {
     }
   }, [searchTerm]);
 
-  useEffect(() => {
-  const fetchSearchResults = async () => {
-    if (!searchTerm.trim()) {
-      setSearchActive(false);
-      setPolls([]);
-      setMessage("");
-      return;
-    }
+// useEffect(() => {
+//   const fetchSearchResults = async () => {
+//     if (!searchTerm.trim()) {
+//       setSearchActive(false);
+//       setPolls([]);
+//       setMessage("");
+//       return;
+//     }
+//
+//     try {
+//       // ⬇️ Get all active polls from smart contract
+//       const response = await axios.get("http://127.0.0.1:8000/polls/list/onchain/active");
+//
+//       // ⬇️ Filter dynamically by name
+//       const filtered = response.data.filter((poll) =>
+//         poll.name.toLowerCase().includes(searchTerm.toLowerCase())
+//       );
+//
+//       setPolls(filtered);
+//       setSearchActive(true);
+//     } catch (error) {
+//       console.error("Search failed:", error);
+//       setPolls([]);
+//       setSearchActive(true);
+//       setMessage("Search error.");
+//     }
+//   };
+//
+//   const timeout = setTimeout(fetchSearchResults, 300); // 🔁 debounce
+//
+//   return () => clearTimeout(timeout); // ✅ dynamic cleanup
+// }, [searchTerm]);
 
-    try {
-      const response = await axios.get(`http://127.0.0.1:8000/polls/search?name=${encodeURIComponent(searchTerm)}`);
-      setPolls(response.data);
-      setSearchActive(true);
-    } catch (error) {
-      setPolls([]);
-      setSearchActive(true);
-      if (error.response?.status === 404) {
-        setMessage("Poll not found.");
-      } else {
-        setMessage("Search error.");
-      }
-    }
-  };
-
-  const debounceTimeout = setTimeout(fetchSearchResults, 300); // debounce by 300ms
-
-  return () => clearTimeout(debounceTimeout); // cleanup
-}, [searchTerm]);
 
 
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) {
-      setMessage("Enter a voting name!");
-      return;
-    }
-    setLoading(true);
-    setSearchActive(true);
-    setMessage("");
-    try {
-      const response = await axios.get(`http://127.0.0.1:8000/polls/search?name=${encodeURIComponent(searchTerm)}`);
-      setPolls(response.data);
-    } catch (error) {
-      setPolls([]);
-      if (error.response?.status === 404) {
-        setMessage("Poll not found.");
-      } else {
-        setMessage("Search error.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+//   const debounceTimeout = setTimeout(fetchSearchResults, 300); // debounce by 300ms
+//
+//   return () => clearTimeout(debounceTimeout); // cleanup
+// }, [searchTerm]);
+
+
+  // const handleSearch = async () => {
+  //   if (!searchTerm.trim()) {
+  //     setMessage("Enter a voting name!");
+  //     return;
+  //   }
+  //   setLoading(true);
+  //   setSearchActive(true);
+  //   setMessage("");
+  //   try {
+  //     const response = await axios.get(`http://127.0.0.1:8000/polls/search?name=${encodeURIComponent(searchTerm)}`);
+  //     setPolls(response.data);
+  //   } catch (error) {
+  //     setPolls([]);
+  //     if (error.response?.status === 404) {
+  //       setMessage("Poll not found.");
+  //     } else {
+  //       setMessage("Search error.");
+  //     }
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleRequestTokens = async () => {
     try {
@@ -333,9 +390,9 @@ useEffect(() => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="input-field"
           />
-          <button className="gradient-button" onClick={handleSearch}>
-            Search
-          </button>
+          {/*<button className="gradient-button" onClick={handleSearch}>*/}
+          {/*  Search*/}
+          {/*</button>*/}
         </div>
 
         {searchActive && polls.length > 0 && (
