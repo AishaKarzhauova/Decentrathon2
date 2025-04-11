@@ -1,41 +1,64 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import SidebarLayout from "../components/SidebarLayout";
+import { useNavigate } from "react-router-dom";
+import "../pages/Dashboard.css";
+import "../pages/CreatePoll.css";
+import { TransitionGroup, CSSTransition } from "react-transition-group";
+
 
 const ProposePoll = () => {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
-    const [candidates, setCandidates] = useState([""]);
+    const [candidates, setCandidates] = useState(["", ""]);
     const [message, setMessage] = useState("");
+    const [user, setUser] = useState(null);
+    const [agaBalance, setAgaBalance] = useState(null);
+    const [showUserInfo, setShowUserInfo] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const navigate = useNavigate();
+
 
     useEffect(() => {
-        const link = document.createElement("link");
-        link.href = "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap";
-        link.rel = "stylesheet";
-        document.head.appendChild(link);
-        return () => {
-            document.head.removeChild(link);
-        };
-    }, []);
+        const token = localStorage.getItem("token");
+        if (!token) {
+            navigate("/");
+            return;
+        }
+
+        axios.get("http://127.0.0.1:8000/user/me", {
+            headers: { Authorization: `Bearer ${token}` }
+        }).then((res) => {
+            setUser(res.data);
+            return axios.get(`http://127.0.0.1:8000/user/balance/${res.data.wallet_address}`);
+        }).then((balanceRes) => {
+            setAgaBalance(balanceRes.data.balance);
+        }).catch(() => {
+            localStorage.removeItem("token");
+            navigate("/");
+        });
+    }, [navigate]);
 
     const handleChange = (e, index) => {
-        const newCandidates = [...candidates];
-        newCandidates[index] = e.target.value;
-        setCandidates(newCandidates);
+        const updated = [...candidates];
+        updated[index] = e.target.value;
+        setCandidates(updated);
     };
 
     const addCandidate = () => {
         if (candidates.length < 8) {
             setCandidates([...candidates, ""]);
         } else {
-            setMessage("Максимум 8 кандидатов.");
+            setMessage("Maximum 8 candidates allowed.");
         }
     };
 
     const removeCandidate = (index) => {
         if (candidates.length > 2) {
-            setCandidates(candidates.filter((_, i) => i !== index));
+            const updated = candidates.filter((_, i) => i !== index);
+            setCandidates(updated);
         } else {
-            setMessage("Минимум 2 кандидата.");
+            setMessage("Minimum 2 candidates required.");
         }
     };
 
@@ -43,160 +66,198 @@ const ProposePoll = () => {
         e.preventDefault();
         const token = localStorage.getItem("token");
         if (!token) {
-            setMessage("Ошибка: Не авторизован.");
+            setMessage("Error: Not authorized.");
             return;
         }
 
         try {
-            const response = await axios.post(
-                "http://127.0.0.1:8000/polls/propose",
-                { name, description, candidates },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            await axios.post("http://127.0.0.1:8000/polls/propose", {
+                name,
+                description,
+                candidates
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
 
-            setMessage("Предложение успешно отправлено!");
+            setMessage("Proposal submitted successfully!");
             setName("");
             setDescription("");
-            setCandidates([""]);
+            setCandidates(["", ""]);
         } catch (error) {
-            setMessage("Ошибка при отправке предложения: " + (error.response?.data?.detail || "Неизвестная ошибка"));
+            setMessage("Error submitting proposal: " + (error.response?.data?.detail || "Unknown error"));
         }
     };
 
-    // 🔹 Стили
-    const pageStyle = {
-        minHeight: "100vh",
-        margin: 0,
-        padding: 0,
-        background: "radial-gradient(circle at top, #222 0%, #111 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "'Montserrat', sans-serif",
-    };
-
+    // ✅ Styles copied from CreatePoll
     const containerStyle = {
-        width: "500px",
-        padding: "30px",
-        borderRadius: "8px",
-        backgroundColor: "rgba(30, 30, 47, 0.9)",
-        boxShadow: "0 0 10px rgba(0,0,0,0.3)",
-        color: "#FFFFFF",
-    };
-
-    const headerStyle = {
-        marginBottom: "20px",
-        textAlign: "center",
-        color: "#00FFC2",
-        fontSize: "1.5rem",
-        fontWeight: 600,
-        textShadow: "0 0 5px rgba(0,255,194,0.4)",
-    };
-
-    const formStyle = {
+        background: "#fff",
+        padding: "40px",
+        borderRadius: "12px",
+        maxWidth: "700px",
+        margin: "0 auto",
+        boxShadow: "0 0 20px rgba(0,0,0,0.05)",
         display: "flex",
         flexDirection: "column",
-        gap: "12px",
+        gap: "20px",
+    };
+
+    const headingStyle = {
+        fontSize: "28px",
+        fontWeight: 600,
+        textAlign: "center",
+        marginBottom: "15px",
+        background: "linear-gradient(90deg, #6e8efb, #a777e3)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
     };
 
     const inputStyle = {
-        padding: "10px",
+        padding: "14px",
         borderRadius: "6px",
-        border: "1px solid #444",
-        backgroundColor: "#2C2C3A",
-        color: "#fff",
-        outline: "none",
-        fontSize: "0.95rem",
+        border: "1px solid #ccc",
+        fontSize: "1rem",
         width: "100%",
+        boxSizing: "border-box",
     };
 
     const buttonStyle = {
-        padding: "12px",
-        borderRadius: "6px",
+        padding: "14px",
+        borderRadius: "8px",
+        fontWeight: "bold",
+        fontSize: "16px",
+        background: "linear-gradient(90deg, #6e8efb, #a777e3)",
         border: "none",
-        backgroundColor: "#00FFC2",
-        color: "#000",
-        fontWeight: 600,
+        color: "#fff",
         cursor: "pointer",
-        transition: "background-color 0.2s ease",
+        transition: "all 0.2s ease",
+        width: "100%",
     };
 
     const messageStyle = {
-        marginTop: "15px",
-        textAlign: "center",
-        fontSize: "0.95rem",
-        backgroundColor: "#2C2C3A",
+        background: "#f1f1f1",
         padding: "10px",
         borderRadius: "6px",
+        textAlign: "center",
+        fontWeight: 500,
     };
 
     return (
-        <div style={pageStyle}>
-            <div style={containerStyle}>
-                <h2 style={headerStyle}>Предложить голосование</h2>
-                <form onSubmit={handleSubmit} style={formStyle}>
-                    <input
-                        type="text"
-                        name="name"
-                        placeholder="Название голосования"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                        style={inputStyle}
-                    />
+        <div className="dashboard-container">
+            <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
+                <SidebarLayout
+                    user={user}
+                    agaBalance={agaBalance}
+                    showUserInfo={showUserInfo}
+                    setShowUserInfo={setShowUserInfo}
+                    handleRequestTokens={() => {}}
+                />
+            </div>
 
-                    <textarea
-                        name="description"
-                        placeholder="Описание голосования"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        required
-                        style={{ ...inputStyle, minHeight: "80px", resize: "vertical" }}
-                    />
+            <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="collapse-btn"
+            >
+                {sidebarCollapsed ? "→" : "←"}
+            </button>
 
-                    {candidates.map((candidate, index) => (
-                        <div key={index} style={{ display: "flex", gap: "10px" }}>
-                            <input
-                                type="text"
-                                placeholder={`Кандидат ${index + 1}`}
-                                value={candidate}
-                                onChange={(e) => handleChange(e, index)}
-                                required
-                                style={inputStyle}
-                            />
-                            {candidates.length > 2 && (
-                                <button
-                                    type="button"
-                                    onClick={() => removeCandidate(index)}
-                                    style={{
+            <div className="main-content">
+                <div style={containerStyle}>
+                    <h2 style={headingStyle}>Propose a Poll</h2>
+                    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                        <input
+                            type="text"
+                            placeholder="Poll Title"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                            style={inputStyle}
+                        />
+
+                        <textarea
+                            placeholder="Poll Description"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            required
+                            style={{ ...inputStyle, minHeight: "80px", resize: "vertical" }}
+                        />
+
+                        <TransitionGroup>
+                          {candidates.map((candidate, index) => {
+                            const nodeRef = React.createRef();
+                            return (
+                              <CSSTransition
+                                key={index}
+                                nodeRef={nodeRef}
+                                timeout={300}
+                                classNames="fade"
+                              >
+                                <div ref={nodeRef} style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+                                  <input
+                                    type="text"
+                                    placeholder={`Candidate ${index + 1}`}
+                                    value={candidate}
+                                    onChange={(e) => handleChange(e, index)}
+                                    required
+                                    style={inputStyle}
+                                  />
+                                  {candidates.length > 2 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => removeCandidate(index)}
+                                      style={{
                                         ...buttonStyle,
-                                        backgroundColor: "red",
-                                        color: "#fff",
-                                        fontWeight: "bold"
-                                    }}
-                                >
-                                    -
-                                </button>
-                            )}
-                        </div>
-                    ))}
+                                        width: "40px",
+                                        padding: "0",
+                                        fontSize: "20px",
+                                        background: "#eee",
+                                        color: "#444",
+                                      }}
+                                    >
+                                      −
+                                    </button>
+                                  )}
+                                </div>
+                              </CSSTransition>
+                            );
+                          })}
+                        </TransitionGroup>
 
-                    {candidates.length < 8 && (
-                        <button
-                            type="button"
-                            onClick={addCandidate}
-                            style={buttonStyle}
-                        >
-                            + Добавить кандидата
+
+                        {candidates.length < 8 && (
+                            <button type="button" onClick={addCandidate} style={buttonStyle}>
+                                + Add Candidate
+                            </button>
+                        )}
+
+                        <button type="submit" style={buttonStyle}>
+                            Submit Proposal
                         </button>
+                    </form>
+
+                    {message && (
+                      <div>
+                        <p style={messageStyle}>{message}</p>
+                        <button
+                          onClick={() => navigate("/dashboard")}
+                          style={{
+                            marginTop: "15px",
+                            padding: "14px",
+                            fontSize: "16px",
+                            fontWeight: "bold",
+                            borderRadius: "8px",
+                            border: "none",
+                            background: "linear-gradient(90deg, #6e8efb, #a777e3)",
+                            color: "white",
+                            cursor: "pointer",
+                            width: "100%",
+                          }}
+                        >
+                          Back to Dashboard
+                        </button>
+                      </div>
                     )}
 
-                    <button type="submit" style={buttonStyle}>
-                        Предложить голосование
-                    </button>
-                </form>
-
-                {message && <p style={messageStyle}>{message}</p>}
+                </div>
             </div>
         </div>
     );

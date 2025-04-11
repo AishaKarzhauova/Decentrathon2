@@ -75,11 +75,13 @@
     transition: opacity 0.3s ease-in-out;
     opacity: 0;
     height: 0;
+    pointer-events: none;
 }
 
 .user-info-container.show {
     opacity: 1;
     height: auto;
+    pointer-events: auto;
 }
 
 

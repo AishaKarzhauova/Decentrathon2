@@ -1,249 +1,199 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ethers } from "ethers";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import SidebarLayout from "../components/SidebarLayout";
+import { FiCheck } from "react-icons/fi";
+import "./CreatePoll.css";
 
 const PollDetail = () => {
-    const { pollId } = useParams();
-    const [poll, setPoll] = useState(null);
-    const [message, setMessage] = useState("");
-    const [hoveredCandidate, setHoveredCandidate] = useState(null);
-    const navigate = useNavigate();
+  const { pollId } = useParams();
+  const [poll, setPoll] = useState(null);
+  const [message, setMessage] = useState("");
+  const [user, setUser] = useState(null);
+  const [agaBalance, setAgaBalance] = useState(null);
+  const [showUserInfo, setShowUserInfo] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-    const TOKEN_ADDRESS = "0x024b770fd5E43258363651B5545efbf080d0775F";
-    const VOTING_CONTRACT_ADDRESS = "0x0946E6cBd737764BdbEC76430d030d30c653A7f9";
-    const TOKEN_ABI = [
-        {
-            "inputs": [
-                { "internalType": "address", "name": "spender", "type": "address" },
-                { "internalType": "uint256", "name": "amount", "type": "uint256" }
-            ],
-            "name": "approve",
-            "outputs": [
-                { "internalType": "bool", "name": "", "type": "bool" }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                { "internalType": "address", "name": "owner", "type": "address" },
-                { "internalType": "address", "name": "spender", "type": "address" }
-            ],
-            "name": "allowance",
-            "outputs": [
-                { "internalType": "uint256", "name": "", "type": "uint256" }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        }
-    ];
+  const TOKEN_ADDRESS = "0x024b770fd5E43258363651B5545efbf080d0775F";
+  const VOTING_CONTRACT_ADDRESS = "0x0946E6cBd737764BdbEC76430d030d30c653A7f9";
 
+  const TOKEN_ABI = [
+    {
+      inputs: [
+        { internalType: "address", name: "spender", type: "address" },
+        { internalType: "uint256", name: "amount", type: "uint256" },
+      ],
+      name: "approve",
+      outputs: [{ internalType: "bool", name: "", type: "bool" }],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        { internalType: "address", name: "owner", type: "address" },
+        { internalType: "address", name: "spender", type: "address" },
+      ],
+      name: "allowance",
+      outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+      stateMutability: "view",
+      type: "function",
+    },
+  ];
 
-    const candidateMapping = { 0: "" };
+  useEffect(() => {
+    fetchPoll();
+    fetchUserData();
+  }, []);
 
-    useEffect(() => {
-        const link = document.createElement("link");
-        link.href = "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap";
-        link.rel = "stylesheet";
-        document.head.appendChild(link);
-        return () => document.head.removeChild(link);
-    }, []);
-
-    useEffect(() => {
-        fetchPollDetail();
-    }, []);
-
-    async function fetchPollDetail() {
-        try {
-            const pollsResponse = await axios.get("http://127.0.0.1:8000/polls/list/");
-            const allPolls = pollsResponse.data;
-            const foundPoll = allPolls.find((p) => p.id == pollId);
-            if (!foundPoll) {
-                setMessage("Голосование не найдено!");
-                return;
-            }
-            setPoll(foundPoll);
-        } catch (error) {
-            console.error("Ошибка загрузки голосования:", error);
-            setMessage("Ошибка загрузки голосования.");
-        }
+  const fetchPoll = async () => {
+    try {
+      const res = await axios.get("http://127.0.0.1:8000/polls/list/");
+      const found = res.data.find((p) => p.id == pollId);
+      if (!found) return setMessage("Poll not found.");
+      setPoll(found);
+    } catch (err) {
+      setMessage("Error loading poll.");
     }
+  };
 
-    async function vote(candidate) {
-        if (!poll || !candidate) {
-            alert("Выберите кандидата!");
-            return;
-        }
-
-        if (!window.ethereum) {
-            alert("MetaMask не установлен!");
-            return;
-        }
-
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        const userAddress = await signer.getAddress();
-
-        try {
-            const tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
-            const allowance = await tokenContract.allowance(userAddress, VOTING_CONTRACT_ADDRESS);
-
-            if (allowance < ethers.parseUnits("10", 18)) {
-                setMessage("Выполняем approve на 10 AGA...");
-                const approveTx = await tokenContract.approve(VOTING_CONTRACT_ADDRESS, ethers.parseUnits("10", 18));
-                await approveTx.wait();
-                setMessage("Approve выполнен! Теперь отправляем голос.");
-            }
-
-            const response = await axios.post(
-                `http://127.0.0.1:8000/votes/${pollId}/${candidate}`,
-                {},
-                { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-            );
-
-            const txData = response.data.transaction;
-            if (!txData) {
-                alert("Ошибка: сервер не вернул транзакцию.");
-                return;
-            }
-
-            const tx = await signer.sendTransaction({
-                to: txData.to,
-                value: txData.value ? ethers.toBigInt(txData.value) : 0n,
-                gasLimit: txData.gas,
-                gasPrice: txData.gasPrice,
-                nonce: txData.nonce,
-                data: txData.data
-            });
-
-            setMessage(`Голос отправлен! Транзакция: ${tx.hash}`);
-        } catch (error) {
-            console.error("Ошибка при голосовании:", error);
-            setMessage(`Ошибка при голосовании: ${error.response?.data?.detail || "Неизвестная ошибка"}`);
-        }
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://127.0.0.1:8000/user/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUser(res.data);
+      const bal = await axios.get(`http://127.0.0.1:8000/user/balance/${res.data.wallet_address}`);
+      setAgaBalance(bal.data.balance);
+    } catch (err) {
+      console.error(err);
     }
+  };
 
-    const pageStyle = {
-        minHeight: "100vh",
-        margin: 0,
-        padding: 0,
-        background: "radial-gradient(circle at top, #222 0%, #111 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "'Montserrat', sans-serif",
-    };
+  const vote = async (candidate) => {
+    if (!window.ethereum) return alert("Please install MetaMask.");
 
-    const containerStyle = {
-        width: "650px",
-        padding: "30px",
-        borderRadius: "8px",
-        backgroundColor: "rgba(30, 30, 47, 0.9)",
-        boxShadow: "0 0 10px rgba(0,0,0,0.3)",
-        color: "#FFFFFF",
-        display: "flex",
-        flexDirection: "column",
-        gap: "20px",
-    };
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const userAddress = await signer.getAddress();
 
-    const headerStyle = {
-        marginBottom: "20px",
-        textAlign: "center",
-        color: "#00FFC2",
-        fontSize: "1.5rem",
-        fontWeight: 600,
-        textShadow: "0 0 5px rgba(0,255,194,0.4)",
-    };
+    try {
+      const tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
+      const allowance = await tokenContract.allowance(userAddress, VOTING_CONTRACT_ADDRESS);
 
-    const pollNameStyle = {
-        fontSize: "1.2rem",
-        fontWeight: 600,
-        marginBottom: "6px",
-    };
+      if (allowance < ethers.parseUnits("10", 18)) {
+        setMessage("Approving 10 AGA...");
+        const approveTx = await tokenContract.approve(VOTING_CONTRACT_ADDRESS, ethers.parseUnits("10", 18));
+        await approveTx.wait();
+        setMessage("Approved. Sending vote...");
+      }
 
-    const descriptionStyle = {
-        fontSize: "0.95rem",
-        fontStyle: "italic",
-        color: "#ccc",
-        marginBottom: "10px",
-    };
+      const res = await axios.post(
+        `http://127.0.0.1:8000/votes/${pollId}/${candidate}`,
+        {},
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
 
-    const candidatesListStyle = {
-        display: "flex",
-        flexDirection: "column",
-        gap: "8px",
-    };
+      const txData = res.data.transaction;
+      const tx = await signer.sendTransaction({
+        to: txData.to,
+        value: txData.value ? ethers.toBigInt(txData.value) : 0n,
+        gasLimit: txData.gas,
+        gasPrice: txData.gasPrice,
+        nonce: txData.nonce,
+        data: txData.data,
+      });
 
-    const candidateButtonStyle = {
-        padding: "12px",
-        borderRadius: "6px",
-        border: "none",
-        backgroundColor: "#00FFC2",
-        color: "#000",
-        fontWeight: 600,
-        cursor: "pointer",
-        transition: "background-color 0.2s ease",
-        fontSize: "0.9rem",
-        textAlign: "center",
-    };
-
-    const candidateButtonHover = {
-        backgroundColor: "#00E6AE",
-    };
-
-    const messageStyle = {
-        marginTop: "15px",
-        textAlign: "center",
-        fontSize: "0.95rem",
-        backgroundColor: "#2C2C3A",
-        padding: "10px",
-        borderRadius: "6px",
-    };
-
-    if (!poll) {
-        return (
-            <div style={pageStyle}>
-                <div style={containerStyle}>
-                    <h2 style={headerStyle}>Загрузка...</h2>
-                    {message && <p style={messageStyle}>{message}</p>}
-                </div>
-            </div>
-        );
+      setMessage(`Vote submitted successfully! Hash: ${tx.hash}`);
+    } catch (err) {
+      setMessage(`❌ ${err.response?.data?.detail || "Voting failed."}`);
     }
+  };
 
-    return (
-        <div style={pageStyle}>
-            <div style={containerStyle}>
-                <h2 style={headerStyle}>Голосование</h2>
-                <div style={pollNameStyle}>{poll.name}</div>
-                <div style={descriptionStyle}>{poll.description}</div>
-                <div style={candidatesListStyle}>
-                    {poll.candidates.map((candidate) => {
-                        const candidateName = typeof candidate === "number"
-                            ? (candidateMapping[candidate] || candidate.toString())
-                            : candidate;
-                        const isHovering = hoveredCandidate === candidateName;
-                        return (
-                            <button
-                                key={candidate}
-                                style={{
-                                    ...candidateButtonStyle,
-                                    ...(isHovering ? candidateButtonHover : {})
-                                }}
-                                onMouseEnter={() => setHoveredCandidate(candidateName)}
-                                onMouseLeave={() => setHoveredCandidate(null)}
-                                onClick={() => vote(candidateName)}
-                            >
-                                {candidateName}
-                            </button>
-                        );
-                    })}
-                </div>
-                {message && <p style={messageStyle}>{message}</p>}
-            </div>
+  return (
+    <div className="dashboard-container" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+      <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
+        <SidebarLayout
+          user={user}
+          agaBalance={agaBalance}
+          showUserInfo={showUserInfo}
+          setShowUserInfo={setShowUserInfo}
+          handleRequestTokens={() => {}}
+        />
+      </div>
+
+      <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn">
+        {sidebarCollapsed ? "→" : "←"}
+      </button>
+
+      <div className="main-content page-centered">
+        <div className="card">
+          <h2 className="header">Poll</h2>
+          {poll ? (
+            <>
+              <h3 style={{ textAlign: "center", fontWeight: 600, fontSize: "20px", marginBottom: "10px" }}>
+                {poll.name}
+              </h3>
+              <p style={{ textAlign: "center", fontStyle: "italic", marginBottom: "20px" }}>
+                {poll.description}
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                {poll.candidates.map((candidate, index) => (
+                  <button
+                    key={index}
+                    className="gradient-button"
+                    style={{ fontSize: "16px", padding: "14px" }}
+                    onClick={() => vote(candidate)}
+                  >
+                    {candidate}
+                  </button>
+                ))}
+              </div>
+
+              {message && (
+                <p className="message" style={{ marginTop: "20px" }}>
+                  {message.includes("Hash:") ? (
+                    <>
+                      {message.split("Hash:")[0]}
+                      <br />
+                      <code style={{ background: "#eee", padding: "10px", borderRadius: "6px", wordBreak: "break-all" }}>
+                        {message.split("Hash:")[1]}
+                      </code>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(message.split("Hash:")[1].trim());
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }}
+                        style={{
+                          marginLeft: "10px",
+                          background: "linear-gradient(90deg, #6e8efb, #a777e3)",
+                          padding: "8px",
+                          border: "none",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          color: "white",
+                        }}
+                      >
+                        {copied ? <FiCheck /> : "Copy"}
+                      </button>
+                    </>
+                  ) : (
+                    message
+                  )}
+                </p>
+              )}
+            </>
+          ) : (
+            <p style={{ textAlign: "center" }}>Loading poll...</p>
+          )}
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default PollDetail;
