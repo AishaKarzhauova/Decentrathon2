@@ -310,6 +310,9 @@ const inputStyle = {
                   color: "white",
                   cursor: "pointer",
                 }}
+                onMouseEnter={(e) => (e.target.style.opacity = "0.85")}
+                onMouseLeave={(e) => (e.target.style.opacity = "1")}
+
               >
                 Back to Dashboard
               </button>

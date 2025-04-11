@@ -241,27 +241,29 @@ const ProposePoll = () => {
                     {message && (
                       <div>
                         <p style={messageStyle}>{message}</p>
-                        <button
-                          onClick={() => navigate("/dashboard")}
-                          style={{
-                            marginTop: "15px",
-                            padding: "14px",
-                            fontSize: "16px",
-                            fontWeight: "bold",
-                            borderRadius: "8px",
-                            border: "none",
-                            background: "linear-gradient(90deg, #6e8efb, #a777e3)",
-                            color: "white",
-                            cursor: "pointer",
-                            width: "100%",
-                          }}
-                          onMouseEnter={(e) => (e.target.style.opacity = "0.85")}
-                          onMouseLeave={(e) => (e.target.style.opacity = "1")}
-                        >
-                          Back to Dashboard
-                        </button>
+                        <div style={{ display: "flex", justifyContent: "center" }}>
+                          <button
+                            onClick={() => navigate("/dashboard")}
+                            style={{
+                              marginTop: "15px",
+                              padding: "12px 20px",
+                              fontSize: "16px",
+                              fontWeight: "bold",
+                              borderRadius: "8px",
+                              border: "none",
+                              background: "linear-gradient(90deg, #6e8efb, #a777e3)",
+                              color: "white",
+                              cursor: "pointer",
+                            }}
+                            onMouseEnter={(e) => (e.target.style.opacity = "0.85")}
+                            onMouseLeave={(e) => (e.target.style.opacity = "1")}
+                          >
+                            Back to Dashboard
+                          </button>
+                        </div>
                       </div>
                     )}
+
 
                 </div>
             </div>
