@@ -3,7 +3,7 @@ import axios from "axios";
 import { ethers } from "ethers";
 import { useParams } from "react-router-dom";
 import SidebarLayout from "../components/SidebarLayout";
-import { FiCheck } from "react-icons/fi";
+import { FiCopy, FiCheck } from "react-icons/fi";
 import "./CreatePoll.css";
 
 const PollDetail = () => {
@@ -71,6 +71,18 @@ const PollDetail = () => {
       console.error(err);
     }
   };
+
+const navButtonStyle = {
+  padding: "12px 20px",
+  fontSize: "16px",
+  fontWeight: "bold",
+  borderRadius: "8px",
+  border: "none",
+  background: "linear-gradient(90deg, #6e8efb, #a777e3)",
+  color: "white",
+  cursor: "pointer",
+  transition: "opacity 0.3s ease",
+};
 
   const vote = async (candidate) => {
     if (!window.ethereum) return alert("Please install MetaMask.");
@@ -153,39 +165,128 @@ const PollDetail = () => {
                 ))}
               </div>
 
-              {message && (
-                <p className="message" style={{ marginTop: "20px" }}>
-                  {message.includes("Hash:") ? (
-                    <>
-                      {message.split("Hash:")[0]}
-                      <br />
-                      <code style={{ background: "#eee", padding: "10px", borderRadius: "6px", wordBreak: "break-all" }}>
-                        {message.split("Hash:")[1]}
-                      </code>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(message.split("Hash:")[1].trim());
-                          setCopied(true);
-                          setTimeout(() => setCopied(false), 2000);
-                        }}
-                        style={{
-                          marginLeft: "10px",
-                          background: "linear-gradient(90deg, #6e8efb, #a777e3)",
-                          padding: "8px",
-                          border: "none",
-                          borderRadius: "6px",
-                          cursor: "pointer",
-                          color: "white",
-                        }}
-                      >
-                        {copied ? <FiCheck /> : "Copy"}
-                      </button>
-                    </>
-                  ) : (
-                    message
-                  )}
-                </p>
-              )}
+{message && (
+  <div
+    style={{
+      marginTop: "20px",
+      background: "#f1f1f1",
+      padding: "20px",
+      borderRadius: "12px",
+      textAlign: "center",
+      fontWeight: 500,
+      maxWidth: "700px",
+      marginInline: "auto",
+    }}
+  >
+    {message.includes("Hash:") ? (
+      <>
+        <p style={{ fontSize: "18px", fontWeight: 600 }}>
+          🎉 Vote submitted successfully!
+        </p>
+
+        <div
+          style={{
+            marginTop: "12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "12px",
+            flexWrap: "nowrap",
+            overflowX: "auto",
+          }}
+        >
+          <code
+            style={{
+              background: "#eee",
+              padding: "10px 12px",
+              borderRadius: "6px",
+              fontSize: "0.95rem",
+              wordBreak: "break-all",
+              maxWidth: "calc(100% - 60px)",
+              flex: 1,
+            }}
+          >
+            {message.split("Hash:")[1].trim()}
+          </code>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(message.split("Hash:")[1].trim());
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
+            onMouseEnter={(e) => (e.target.style.opacity = "0.8")}
+            onMouseLeave={(e) => (e.target.style.opacity = "1")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "10px",
+              borderRadius: "6px",
+              background: "linear-gradient(90deg, #6e8efb, #a777e3)",
+              color: "#fff",
+              border: "none",
+              cursor: "pointer",
+              transition: "opacity 0.3s ease",
+              minWidth: "44px",
+            }}
+            title="Copy to clipboard"
+          >
+            {copied ? <FiCheck size={20} /> : <FiCopy size={20} />}
+          </button>
+        </div>
+
+        {/* 🔗 Etherscan */}
+        <div style={{ marginTop: "10px" }}>
+          <a
+            href={`https://sepolia.etherscan.io/tx/${message.split("Hash:")[1].trim()}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: "#6e8efb",
+              textDecoration: "underline",
+              fontSize: "0.95rem",
+            }}
+          >
+            View on Etherscan ↗
+          </a>
+        </div>
+
+        {/* Navigation Buttons */}
+        <div
+          style={{
+            marginTop: "20px",
+            display: "flex",
+            gap: "12px",
+            justifyContent: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          <button
+            onClick={() => (window.location.href = "/dashboard")}
+            style={navButtonStyle}
+            onMouseEnter={(e) => (e.target.style.opacity = "0.85")}
+            onMouseLeave={(e) => (e.target.style.opacity = "1")}
+          >
+            Back to Dashboard
+          </button>
+          <button
+            onClick={() => (window.location.href = "/vote-history")}
+            style={navButtonStyle}
+            onMouseEnter={(e) => (e.target.style.opacity = "0.85")}
+            onMouseLeave={(e) => (e.target.style.opacity = "1")}
+          >
+            Check Voting History
+          </button>
+        </div>
+      </>
+    ) : (
+      <p>{message}</p>
+    )}
+  </div>
+)}
+
+
+
             </>
           ) : (
             <p style={{ textAlign: "center" }}>Loading poll...</p>

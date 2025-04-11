@@ -224,12 +224,16 @@ const ProposePoll = () => {
 
 
                         {candidates.length < 8 && (
-                            <button type="button" onClick={addCandidate} style={buttonStyle}>
+                            <button type="button" onClick={addCandidate} style={buttonStyle}
+                            onMouseEnter={(e) => (e.target.style.opacity = "0.85")}
+                            onMouseLeave={(e) => (e.target.style.opacity = "1")}>
                                 + Add Candidate
                             </button>
                         )}
 
-                        <button type="submit" style={buttonStyle}>
+                        <button type="submit" style={buttonStyle}
+                        onMouseEnter={(e) => (e.target.style.opacity = "0.85")}
+                        onMouseLeave={(e) => (e.target.style.opacity = "1")}>
                             Submit Proposal
                         </button>
                     </form>
@@ -251,6 +255,8 @@ const ProposePoll = () => {
                             cursor: "pointer",
                             width: "100%",
                           }}
+                          onMouseEnter={(e) => (e.target.style.opacity = "0.85")}
+                          onMouseLeave={(e) => (e.target.style.opacity = "1")}
                         >
                           Back to Dashboard
                         </button>
