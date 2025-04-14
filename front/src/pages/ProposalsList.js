@@ -175,68 +175,74 @@ const ProposalsList = () => {
           {proposals.length === 0 ? (
             <p style={{ textAlign: "center" }}>No proposals found.</p>
           ) : (
-            <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 16px" }}>
-              <thead>
-                <tr style={{ background: "#f4f4f4" }}>
-                  <th style={thTdStyle}>Poll Name</th>
-                  <th style={thTdStyle}>Description</th>
-                  <th style={thTdStyle}>Options</th>
-                  <th style={thTdStyle}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {proposals.map((proposal) => (
-                  <tr
-                    key={proposal.id}
-                    style={{
-                      background: "#fff",
-                      borderRadius: "8px",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-                    }}
-                  >
-                    <td style={thTdStyle}>{proposal.name}</td>
-                    <td style={thTdStyle}>{proposal.description || "No description"}</td>
-                    <td style={thTdStyle}>
-                      <ul style={{ margin: 0, paddingLeft: "20px" }}>
-                        {proposal.candidates.map((c, i) => (
-                          <li key={i}>{c}</li>
-                        ))}
-                      </ul>
-                    </td>
-                    <td style={thTdStyle}>
-                      {!proposal.approved_by_admin ? (
-                        <div style={{ display: "flex", gap: "10px" }}>
-                          <button
-                            style={approveButtonStyle}
-                            onMouseEnter={(e) => (e.target.style.opacity = 0.9)}
-                            onMouseLeave={(e) => (e.target.style.opacity = 1)}
-                            onClick={() => approvePoll(proposal.id)}
-                          >
-                            Approve
-                          </button>
-                          <button
-                            style={rejectButtonStyle}
-                            onMouseEnter={(e) => (e.target.style.opacity = 0.9)}
-                            onMouseLeave={(e) => (e.target.style.opacity = 1)}
-                            onClick={() => rejectPoll(proposal.id)}
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      ) : proposal.approved ? (
-                        <span style={{ fontWeight: 600, color: "#4caf50" }}>In Contract ✅</span>
-                      ) : (
-                        <span style={{ fontWeight: 600, color: "#ff9800" }}>
-                          Pending Approval
-                          <span className="dot-animation" style={{ display: "inline-block", minWidth: "1.5em" }} />
-                        </span>
+            <table
+  style={{
+    width: "100%",
+    borderCollapse: "separate",
+    borderSpacing: "0 16px",
+    tableLayout: "fixed", // 👈 forces even spacing
+  }}
+>
+  <thead>
+    <tr style={{ background: "#f4f4f4" }}>
+      <th style={{ ...thTdStyle, width: "25%" }}>Poll Name</th>
+      <th style={{ ...thTdStyle, width: "30%" }}>Description</th>
+      <th style={{ ...thTdStyle, width: "25%" }}>Options</th>
+      <th style={{ ...thTdStyle, width: "20%", textAlign: "center" , paddingRight: "60px"}}>Actions</th> {/* 👈 RIGHT align */}
+    </tr>
+  </thead>
+  <tbody>
+    {proposals.map((proposal) => (
+      <tr
+        key={proposal.id}
+        style={{
+          background: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+        }}
+      >
+        <td style={thTdStyle}>{proposal.name}</td>
+        <td style={thTdStyle}>{proposal.description || "No description"}</td>
+        <td style={{ ...thTdStyle, paddingRight: "10px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            {proposal.candidates.map((c, i) => (
+              <span key={i}>{c}</span> // 👈 no bullets
+            ))}
+          </div>
+        </td>
+        <td style={{ ...thTdStyle, textAlign: "right" }}> {/* 👈 right align buttons */}
+          {!proposal.approved_by_admin ? (
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button
+                style={approveButtonStyle}
+                onMouseEnter={(e) => (e.target.style.opacity = 0.9)}
+                onMouseLeave={(e) => (e.target.style.opacity = 1)}
+                onClick={() => approvePoll(proposal.id)}
+              >
+                Approve
+              </button>
+              <button
+                style={rejectButtonStyle}
+                onMouseEnter={(e) => (e.target.style.opacity = 0.9)}
+                onMouseLeave={(e) => (e.target.style.opacity = 1)}
+                onClick={() => rejectPoll(proposal.id)}
+              >
+                Reject
+              </button>
+            </div>
+          ) : proposal.approved ? (
+            <span style={{ fontWeight: 600, color: "#4caf50" }}>In Contract ✅</span>
+          ) : (
+            <span style={{ fontWeight: 600, color: "#ff9800" }}>
+              Pending Approval<span className="dot-animation" style={{ display: "inline-block", minWidth: "1.5em" }} />
+            </span>
+          )}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
 
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           )}
         </div>
       </div>
