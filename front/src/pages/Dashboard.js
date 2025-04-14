@@ -36,6 +36,7 @@ const Dashboard = () => {
   const [mostVotedPoll, setMostVotedPoll] = useState(null);
 
   const [allOpenPolls, setAllOpenPolls] = useState([]);
+  const [showNotification, setShowNotification] = useState(false);
 
   useEffect(() => {
     const fetchOpenPolls = async () => {
@@ -352,17 +353,19 @@ useEffect(() => {
   //   }
   // };
 
-  const handleRequestTokens = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post("http://127.0.0.1:8000/tokens/request-tokens", {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setMessage(response.data.message);
-    } catch (error) {
-      setMessage(error.response?.data?.detail || "Token request failed.");
-    }
-  };
+const handleRequestTokens = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    await axios.post("http://127.0.0.1:8000/user/request-tokens", {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 2500);
+  } catch (error) {
+    console.error("Token request failed:", error);
+  }
+};
 
   return (
     <div className="dashboard-container">
@@ -374,6 +377,11 @@ useEffect(() => {
           setShowUserInfo={setShowUserInfo}
           handleRequestTokens={handleRequestTokens}
         />
+        {showNotification && (
+          <div className="notification-popup">
+            🎉 Request for 10 AGA has been sent!
+          </div>
+        )}
       </div>
 
 

@@ -1,16 +1,25 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import SidebarLayout from "../components/SidebarLayout";
+import { FaVoteYea, FaLock } from "react-icons/fa";
+import "../pages/Dashboard.css";
 
 const PollsList = () => {
     const [polls, setPolls] = useState([]);
     const [message, setMessage] = useState("");
     const [hoveredIndex, setHoveredIndex] = useState(null);
-    const [loading, setLoading] = useState(true); // Флаг загрузки данных
+    const [loading, setLoading] = useState(true);
+
+    const [user, setUser] = useState(null);
+    const [agaBalance, setAgaBalance] = useState(null);
+    const [showUserInfo, setShowUserInfo] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     const navigate = useNavigate();
+    const [votes, setVotes] = useState({});
 
-    // Подключаем Montserrat
+
     useEffect(() => {
         const link = document.createElement("link");
         link.href = "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap";
@@ -22,122 +31,201 @@ const PollsList = () => {
     }, []);
 
     useEffect(() => {
-        async function fetchPolls() {
-            try {
-                const response = await axios.get("http://127.0.0.1:8000/polls/list/onchain/active");
-                setPolls(response.data);
-            } catch (error) {
-                console.error("Ошибка загрузки голосований:", error);
-                setMessage("Ошибка загрузки голосований.");
-            } finally {
-                setTimeout(() => setLoading(false), 1000); // ✅ Добавляем небольшую задержку (1 сек.)
-            }
-        }
-
-        fetchPolls();
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const headers = { Authorization: `Bearer ${token}` };
+        axios
+            .get("http://127.0.0.1:8000/user/me", { headers })
+            .then((res) => {
+                setUser(res.data);
+                setAgaBalance(res.data.balance || null);
+            })
+            .catch((err) => console.error("User fetch error:", err));
     }, []);
 
-    // При клике на голосование → переход на страницу деталей
-    function handlePollClick(pollId) {
-        navigate(`/vote/${pollId}`);
+useEffect(() => {
+    async function fetchPolls() {
+        try {
+            const response = await axios.get("http://127.0.0.1:8000/polls/list/onchain/active");
+            setPolls(response.data);
+        } catch (error) {
+            console.error("Polls fetch error:", error);
+            setMessage("Failed to load polls.");
+        } finally {
+            setTimeout(() => setLoading(false), 1000);
+        }
     }
 
-    // 🔹 Стили
-    const pageStyle = {
-        minHeight: "100vh",
-        margin: 0,
-        padding: 0,
-        background: "radial-gradient(circle at top, #222 0%, #111 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "'Montserrat', sans-serif",
-    };
+    fetchPolls();
+}, []);
 
-    const containerStyle = {
-        width: "650px",
-        padding: "30px",
-        borderRadius: "8px",
-        backgroundColor: "rgba(30, 30, 47, 0.9)",
-        boxShadow: "0 0 10px rgba(0,0,0,0.3)",
-        color: "#FFFFFF",
-        display: "flex",
-        flexDirection: "column",
-        gap: "20px",
-    };
+useEffect(() => {
+    async function fetchVotes() {
+        try {
+            const response = await axios.get("http://127.0.0.1:8000/polls/votes/all");
+            setVotes(response.data); // { pollId: voteCount }
+        } catch (error) {
+            console.error("Votes fetch error:", error);
+        }
+    }
 
-    const headerStyle = {
-        marginBottom: "20px",
-        textAlign: "center",
-        color: "#00FFC2",
-        fontSize: "1.5rem",
-        fontWeight: 600,
-        textShadow: "0 0 5px rgba(0,255,194,0.4)",
-    };
+    fetchVotes();
+}, []);
 
-    const pollsListStyle = {
-        listStyle: "none",
-        padding: 0,
-        margin: 0,
-        display: "flex",
-        flexDirection: "column",
-        gap: "12px",
-    };
 
-    const pollItemStyle = {
-        backgroundColor: "#2C2C3A",
-        padding: "12px",
-        borderRadius: "6px",
-        cursor: "pointer",
-        transition: "background-color 0.2s ease",
-        border: "1px solid #444",
-    };
-
-    const pollItemHover = {
-        backgroundColor: "#3A3A4C",
-    };
-
-    const messageStyle = {
-        marginTop: "15px",
-        textAlign: "center",
-        fontSize: "0.95rem",
-        backgroundColor: "#2C2C3A",
-        padding: "10px",
-        borderRadius: "6px",
+    const handlePollClick = (pollId) => {
+        navigate(`/vote/${pollId}`);
     };
 
     return (
-        <div style={pageStyle}>
-            <div style={containerStyle}>
-                <h1 style={headerStyle}>Список голосований</h1>
+        <div className="dashboard-container" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+            <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
+                <SidebarLayout
+                    user={user}
+                    agaBalance={agaBalance}
+                    showUserInfo={showUserInfo}
+                    setShowUserInfo={setShowUserInfo}
+                    handleRequestTokens={() => {}}
+                />
+            </div>
 
-                {loading ? (
-                    <p style={{ textAlign: "center" }}>Загрузка голосований...</p>
-                ) : polls.length === 0 ? (
-                    <p style={{ textAlign: "center" }}>Нет доступных голосований.</p>
-                ) : (
-                    <ul style={pollsListStyle}>
-                        {polls.map((poll, index) => {
-                            const isHover = index === hoveredIndex;
-                            return (
-                                <li
-                                    key={poll.id}
-                                    style={{
-                                        ...pollItemStyle,
-                                        ...(isHover ? pollItemHover : {}),
-                                    }}
-                                    onMouseEnter={() => setHoveredIndex(index)}
-                                    onMouseLeave={() => setHoveredIndex(null)}
-                                    onClick={() => handlePollClick(poll.id)}
-                                >
-                                    {poll.name}
-                                </li>
-                            );
-                        })}
-                    </ul>
-                )}
+            <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn">
+                {sidebarCollapsed ? "→" : "←"}
+            </button>
 
-                {message && <p style={messageStyle}>{message}</p>}
+            <div className="main-content" style={{ padding: "40px", width: "100%" }}>
+                <div
+                    style={{
+                        background: "#fff",
+                        padding: "40px",
+                        borderRadius: "12px",
+                        boxShadow: "0 0 20px rgba(0,0,0,0.05)",
+                        width: "100%",
+                        maxWidth: "800px",
+                        margin: "0 auto",
+                    }}
+                >
+                    <div
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "30px",
+  }}
+>
+  <h1
+    style={{
+      fontSize: "28px",
+      fontWeight: 700,
+      background: "linear-gradient(90deg, #6e8efb, #a777e3)",
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
+      margin: 0,
+    }}
+  >
+    List of Polls
+  </h1>
+
+  <span
+    style={{
+      fontWeight: 600,
+      background: "linear-gradient(90deg, #6e8efb, #a777e3)",
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
+      fontSize: "23px",
+    }}
+  >
+    Total number of polls: {polls.length}
+  </span>
+</div>
+
+
+                    {loading ? (
+                        <p style={{ textAlign: "center" }}>Loading polls...</p>
+                    ) : polls.length === 0 ? (
+                        <p style={{ textAlign: "center" }}>No polls available.</p>
+                    ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                            {polls.map((poll, index) => {
+                                const isHover = index === hoveredIndex;
+                                const isActive = poll.active;
+
+                                return (
+                                    <div
+                                        key={poll.id}
+                                        onMouseEnter={() => setHoveredIndex(index)}
+                                        onMouseLeave={() => setHoveredIndex(null)}
+                                        className="poll-card"
+                                        style={{
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                            padding: "16px 20px",
+                                            borderRadius: "10px",
+                                            border: "1px solid #eee",
+                                            backgroundColor: isHover ? "#f9f9f9" : "#fff",
+                                            boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+                                            cursor: isActive ? "pointer" : "default",
+                                            transition: "0.2s ease",
+                                        }}
+                                    >
+                                        <div>
+    <div style={{ fontWeight: 600, fontSize: "1.1rem" }}>
+        {poll.name}
+    </div>
+    <div style={{ fontSize: "0.85rem", color: "#888", marginTop: "4px" }}>
+        Total votes: {votes[poll.id] || 0}
+    </div>
+</div>
+
+
+
+                                        {isActive ? (
+    <button
+        onClick={() => handlePollClick(poll.id)}
+        style={{
+            background: "linear-gradient(90deg, #6e8efb, #a777e3)",
+            border: "none",
+            borderRadius: "10px",
+            color: "#fff",
+            fontWeight: 600,
+            padding: "10px 18px", // ⬅️ made bigger
+            fontSize: "1rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            cursor: "pointer",
+        }}
+    >
+        <FaVoteYea size={18} />
+
+    </button>
+) : (
+    <div
+        style={{
+            background: "linear-gradient(90deg, #bdbdbd, #999)",
+            borderRadius: "10px",
+            padding: "10px 18px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "default",
+        }}
+    >
+        <FaLock size={20} color="#fff" /> {/* ⬅️ white icon only, no text */}
+    </div>
+)}
+
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {message && (
+                        <p style={{ marginTop: "20px", textAlign: "center", color: "red" }}>{message}</p>
+                    )}
+                </div>
             </div>
         </div>
     );

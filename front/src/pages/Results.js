@@ -1,198 +1,177 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
+import SidebarLayout from "../components/SidebarLayout";
 
 const Results = () => {
-    const [polls, setPolls] = useState([]);
-    const [selectedPoll, setSelectedPoll] = useState(null);
-    const [votes, setVotes] = useState({});
-    const [message, setMessage] = useState("");
-    const [hoverButton, setHoverButton] = useState(false);
+  const [polls, setPolls] = useState([]);
+  const [results, setResults] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [user, setUser] = useState(null);
+  const [agaBalance, setAgaBalance] = useState(null);
+  const [showUserInfo, setShowUserInfo] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-    // Подключаем Google Font (Montserrat)
-    useEffect(() => {
-        const link = document.createElement("link");
-        link.href = "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap";
-        link.rel = "stylesheet";
-        document.head.appendChild(link);
-        return () => {
-            document.head.removeChild(link);
-        };
-    }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-    useEffect(() => {
-        fetchPolls();
-    }, []);
+  const fetchData = async () => {
+    const token = localStorage.getItem("token");
+    const headers = { Authorization: `Bearer ${token}` };
 
-    async function fetchPolls() {
-        try {
-            const response = await axios.get("http://127.0.0.1:8000/polls/list/");
-            setPolls(response.data);
-        } catch (error) {
-            console.error("Ошибка загрузки голосований:", error);
-            setMessage("Ошибка загрузки голосований.");
+    try {
+      const [pollsRes, userRes] = await Promise.all([
+        axios.get("http://127.0.0.1:8000/polls/list/"),
+        axios.get("http://127.0.0.1:8000/user/me", { headers }),
+      ]);
+
+      setUser(userRes.data);
+      setAgaBalance(userRes.data.balance || null);
+      setPolls(pollsRes.data);
+
+      const fetchedResults = [];
+
+      for (const poll of pollsRes.data) {
+        const voteResults = {};
+        for (const candidate of poll.candidates) {
+          const res = await axios.get(`http://127.0.0.1:8000/votes/${poll.id}/${candidate}`);
+          voteResults[candidate] = res.data.votes;
         }
+        fetchedResults.push({ poll: poll.name, candidates: voteResults });
+      }
+
+      setResults(fetchedResults);
+    } catch (error) {
+      console.error("Error fetching data:", error);
     }
+  };
 
-    async function fetchVotes() {
-        if (!selectedPoll) {
-            alert("Выберите голосование!");
-            return;
-        }
+  const filteredResults = results.filter((item) =>
+    item.poll.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-        setMessage("Загрузка результатов...");
+  const inputStyle = {
+    width: "100%",
+    maxWidth: "700px",
+    padding: "12px",
+    borderRadius: "20px",
+    border: "2px solid #ccc",
+    fontSize: "16px",
+    marginBottom: "30px",
+    outline: "none",
+    background: "white",
+    color: "#333",
+  };
 
-        try {
-            const selectedPollData = polls.find(p => p.id == selectedPoll);
-            if (!selectedPollData) {
-                setMessage("Ошибка: голосование не найдено!");
-                return;
-            }
+  const thTdStyle = {
+    padding: "14px",
+    textAlign: "left",
+    fontWeight: "bold",
+    fontSize: "20px",
+    background: "linear-gradient(90deg, #6e8efb, #a777e3)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+  };
 
-            let results = {};
-            for (let candidate of selectedPollData.candidates) {
-                const response = await axios.get(`http://127.0.0.1:8000/votes/${selectedPoll}/${candidate}`);
-                results[candidate] = response.data.votes;
-            }
+  return (
+    <div className="dashboard-container" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+      <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
+        <SidebarLayout
+          user={user}
+          agaBalance={agaBalance}
+          showUserInfo={showUserInfo}
+          setShowUserInfo={setShowUserInfo}
+          handleRequestTokens={() => {}}
+        />
+      </div>
 
-            setVotes(results);
-            setMessage("");
-        } catch (error) {
-            console.error("Ошибка загрузки результатов:", error);
-            setMessage("Ошибка загрузки результатов голосования.");
-        }
-    }
+      <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn">
+        {sidebarCollapsed ? "→" : "←"}
+      </button>
 
-    // 🔹 Стили
-    const pageStyle = {
-        minHeight: "100vh",
-        margin: 0,
-        padding: 0,
-        background: "radial-gradient(circle at top, #222 0%, #111 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "'Montserrat', sans-serif",
-    };
+      <div className="main-content" style={{ padding: "40px", width: "100%" }}>
+        <div
+          style={{
+            background: "#fff",
+            padding: "40px",
+            borderRadius: "12px",
+            boxShadow: "0 0 20px rgba(0,0,0,0.05)",
+            width: "100%",
+            maxWidth: "1000px",
+            margin: "0 auto",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: "28px",
+              fontWeight: 600,
+              textAlign: "center",
+              marginBottom: "30px",
+              background: "linear-gradient(90deg, #6e8efb, #a777e3)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Voting Results
+          </h2>
 
-    const containerStyle = {
-        width: "600px",
-        padding: "30px",
-        borderRadius: "8px",
-        backgroundColor: "rgba(30, 30, 47, 0.9)",
-        boxShadow: "0 0 10px rgba(0,0,0,0.3)",
-        color: "#FFFFFF",
-        display: "flex",
-        flexDirection: "column",
-        gap: "20px",
-    };
+          <input
+            type="text"
+            placeholder="Search polls or candidates..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={inputStyle}
+          />
 
-    const headerStyle = {
-        marginBottom: "20px",
-        textAlign: "center",
-        color: "#00FFC2",
-        fontSize: "1.5rem",
-        fontWeight: 600,
-        textShadow: "0 0 5px rgba(0,255,194,0.4)",
-    };
+          <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 16px" }}>
+            <thead>
+              <tr style={{ background: "#f4f4f4" }}>
+                <th style={thTdStyle}>Poll</th>
+                <th style={thTdStyle}>Candidates</th>
+                <th style={thTdStyle}>Votes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredResults.map((entry, index) => (
+                <tr
+                  key={index}
+                  style={{
+                    background: "#fefefe",
+                    borderRadius: "8px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                    fontSize: "16px",
+                    fontWeight: "500",
+                  }}
+                >
+                  <td style={thTdStyle}>{entry.poll}</td>
+                  <td style={thTdStyle}>
+                    <ul style={{ margin: 0, paddingLeft: "20px" }}>
+                      {Object.keys(entry.candidates).map((candidate, idx) => (
+                        <li key={idx}>{candidate}</li>
+                      ))}
+                    </ul>
+                  </td>
+                  <td style={thTdStyle}>
+                    <ul style={{ margin: 0, paddingLeft: "20px" }}>
+                      {Object.values(entry.candidates).map((votes, idx) => (
+                        <li key={idx}>{votes}</li>
+                      ))}
+                    </ul>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-    const selectBoxStyle = {
-        display: "flex",
-        gap: "10px",
-        alignItems: "center",
-    };
-
-    const selectStyle = {
-        padding: "10px",
-        borderRadius: "6px",
-        border: "1px solid #444",
-        backgroundColor: "#2C2C3A",
-        color: "#fff",
-        outline: "none",
-        fontSize: "0.95rem",
-    };
-
-    const buttonStyle = {
-        padding: "10px 16px",
-        borderRadius: "6px",
-        border: "none",
-        backgroundColor: "#00FFC2",
-        color: "#000",
-        fontWeight: 600,
-        cursor: "pointer",
-        transition: "background-color 0.2s ease",
-    };
-
-    const buttonHover = {
-        backgroundColor: "#00E6AE",
-    };
-
-    const messageStyle = {
-        marginTop: "15px",
-        textAlign: "center",
-        fontSize: "0.95rem",
-        backgroundColor: "#2C2C3A",
-        padding: "10px",
-        borderRadius: "6px",
-    };
-
-    const resultsStyle = {
-        marginTop: "20px",
-    };
-
-    const resultItemStyle = {
-        marginBottom: "8px",
-    };
-
-    return (
-        <div style={pageStyle}>
-            <div style={containerStyle}>
-                <h1 style={headerStyle}>Результаты голосования</h1>
-
-                {polls.length === 0 ? (
-                    <p>Нет доступных голосований.</p>
-                ) : (
-                    <div style={selectBoxStyle}>
-                        <label>Выберите голосование:</label>
-                        <select
-                            style={selectStyle}
-                            onChange={(e) => setSelectedPoll(e.target.value)}
-                        >
-                            <option value="">-- Выберите --</option>
-                            {polls.map((poll) => (
-                                <option key={poll.id} value={poll.id}>{poll.name}</option>
-                            ))}
-                        </select>
-                        <button
-                            style={{
-                                ...buttonStyle,
-                                ...(hoverButton ? buttonHover : {})
-                            }}
-                            onMouseEnter={() => setHoverButton(true)}
-                            onMouseLeave={() => setHoverButton(false)}
-                            onClick={fetchVotes}
-                        >
-                            Показать результаты
-                        </button>
-                    </div>
-                )}
-
-                {message && <p style={messageStyle}>{message}</p>}
-
-                {Object.keys(votes).length > 0 && (
-                    <div style={resultsStyle}>
-                        <h2>Результаты</h2>
-                        <ul style={{ listStyle: "none", padding: 0 }}>
-                            {Object.entries(votes).map(([candidate, voteCount]) => (
-                                <li key={candidate} style={resultItemStyle}>
-                                    {candidate}: {voteCount} голосов
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-            </div>
+          {filteredResults.length === 0 && (
+            <p style={{ textAlign: "center", marginTop: "20px", fontWeight: 500 }}>
+              No results found.
+            </p>
+          )}
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default Results;
