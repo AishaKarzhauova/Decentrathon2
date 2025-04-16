@@ -21,13 +21,10 @@ import { PieChart, Pie, Cell } from "recharts";
 import "./Dashboard.css";
 
 const Dashboard = () => {
-  const [user, setUser] = useState(null);
-  const [agaBalance, setAgaBalance] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [polls, setPolls] = useState([]);
-  const [showUserInfo, setShowUserInfo] = useState(false);
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+
   const [searchActive, setSearchActive] = useState(false);
   const [latestPolls, setLatestPolls] = useState([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -38,21 +35,22 @@ const Dashboard = () => {
   const [allOpenPolls, setAllOpenPolls] = useState([]);
   const [showNotification, setShowNotification] = useState(false);
 
-  useEffect(() => {
-    const fetchOpenPolls = async () => {
-      try {
-        const response = await axios.get("http://127.0.0.1:8000/polls/list/onchain/active");
-        setAllOpenPolls(response.data);
-        setLatestPolls(response.data.slice(0, 5));
+useEffect(() => {
+  const fetchOpenPolls = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/polls/list/onchain/active");
+      setAllOpenPolls(response.data);
+      setLatestPolls(response.data.slice(0, 5));
 
-        const sorted = [...response.data].sort((a, b) => b.vote_count - a.vote_count);
-        setMostVotedPoll(sorted[0]);
-      } catch (error) {
-        console.error("Failed to fetch open polls:", error);
-      }
-    };
-    fetchOpenPolls();
-  }, []);
+      const sorted = [...response.data].sort((a, b) => b.vote_count - a.vote_count);
+      setMostVotedPoll(sorted[0]);
+    } catch (error) {
+      console.error("Failed to fetch open polls:", error);
+    }
+  };
+  fetchOpenPolls();
+}, []);
+
 
     useEffect(() => {
     if (!searchTerm.trim()) {
@@ -69,31 +67,6 @@ const Dashboard = () => {
     setSearchActive(true);
   }, [searchTerm, allOpenPolls]);
 
-  const handleSearch = () => {
-    if (!searchTerm.trim()) {
-      setMessage("Enter a voting name!");
-      return;
-    }
-
-    const filtered = allOpenPolls.filter(poll =>
-      poll.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setPolls(filtered);
-    setSearchActive(true);
-  };
-
-useEffect(() => {
-  const fetchMostVoted = async () => {
-    try {
-      const response = await axios.get("http://127.0.0.1:8000/polls/list/onchain/active");
-      const sorted = [...response.data].sort((a, b) => b.vote_count - a.vote_count);
-      setMostVotedPoll(sorted[0]); // 🎯 top voted
-    } catch (error) {
-      console.error("Failed to fetch most voted:", error);
-    }
-  };
-  fetchMostVoted();
-}, []);
 
   const headingStyle = {
     fontSize: "30px",
@@ -243,43 +216,6 @@ useEffect(() => {
   );
 
 
-  useEffect(() => {
-    async function fetchLatestPolls() {
-      try {
-        const response = await axios.get("http://127.0.0.1:8000/polls/list/onchain/active");
-        const latest = response.data.slice(0, 5);
-        setLatestPolls(latest);
-      } catch (error) {
-        console.error("Error fetching latest polls:", error);
-      }
-    }
-    fetchLatestPolls();
-  }, []);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/");
-        return;
-      }
-      try {
-        const response = await axios.get("http://127.0.0.1:8000/user/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUser(response.data);
-        const balanceResponse = await axios.get(
-          `http://127.0.0.1:8000/user/balance/${response.data.wallet_address}`
-        );
-        setAgaBalance(balanceResponse.data.balance);
-      } catch (error) {
-        console.error("Error loading user:", error);
-        localStorage.removeItem("token");
-        navigate("/");
-      }
-    };
-    fetchUserData();
-  }, [navigate]);
 
   useEffect(() => {
     if (searchTerm.trim() === "") {
@@ -289,99 +225,11 @@ useEffect(() => {
     }
   }, [searchTerm]);
 
-// useEffect(() => {
-//   const fetchSearchResults = async () => {
-//     if (!searchTerm.trim()) {
-//       setSearchActive(false);
-//       setPolls([]);
-//       setMessage("");
-//       return;
-//     }
-//
-//     try {
-//       // ⬇️ Get all active polls from smart contract
-//       const response = await axios.get("http://127.0.0.1:8000/polls/list/onchain/active");
-//
-//       // ⬇️ Filter dynamically by name
-//       const filtered = response.data.filter((poll) =>
-//         poll.name.toLowerCase().includes(searchTerm.toLowerCase())
-//       );
-//
-//       setPolls(filtered);
-//       setSearchActive(true);
-//     } catch (error) {
-//       console.error("Search failed:", error);
-//       setPolls([]);
-//       setSearchActive(true);
-//       setMessage("Search error.");
-//     }
-//   };
-//
-//   const timeout = setTimeout(fetchSearchResults, 300); // 🔁 debounce
-//
-//   return () => clearTimeout(timeout); // ✅ dynamic cleanup
-// }, [searchTerm]);
-
-
-
-//   const debounceTimeout = setTimeout(fetchSearchResults, 300); // debounce by 300ms
-//
-//   return () => clearTimeout(debounceTimeout); // cleanup
-// }, [searchTerm]);
-
-
-  // const handleSearch = async () => {
-  //   if (!searchTerm.trim()) {
-  //     setMessage("Enter a voting name!");
-  //     return;
-  //   }
-  //   setLoading(true);
-  //   setSearchActive(true);
-  //   setMessage("");
-  //   try {
-  //     const response = await axios.get(`http://127.0.0.1:8000/polls/search?name=${encodeURIComponent(searchTerm)}`);
-  //     setPolls(response.data);
-  //   } catch (error) {
-  //     setPolls([]);
-  //     if (error.response?.status === 404) {
-  //       setMessage("Poll not found.");
-  //     } else {
-  //       setMessage("Search error.");
-  //     }
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-const handleRequestTokens = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    await axios.post("http://127.0.0.1:8000/user/request-tokens", {}, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    setShowNotification(true);
-    setTimeout(() => setShowNotification(false), 2500);
-  } catch (error) {
-    console.error("Token request failed:", error);
-  }
-};
-
   return (
     <div className="dashboard-container">
       <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
         <SidebarLayout
-          user={user}
-          agaBalance={agaBalance}
-          showUserInfo={showUserInfo}
-          setShowUserInfo={setShowUserInfo}
-          handleRequestTokens={handleRequestTokens}
         />
-        {showNotification && (
-          <div className="notification-popup">
-            🎉 Request for 10 AGA has been sent!
-          </div>
-        )}
       </div>
 
 

@@ -18,7 +18,7 @@ const CreatePoll = () => {
   const [message, setMessage] = useState("");
   const [user, setUser] = useState(null);
   const [agaBalance, setAgaBalance] = useState(null);
-  const [showUserInfo, setShowUserInfo] = useState(false);
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
@@ -166,11 +166,7 @@ const inputStyle = {
     <div className="dashboard-container" style={{ fontFamily: "'Montserrat', sans-serif" }}>
       <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
         <SidebarLayout
-          user={user}
-          agaBalance={agaBalance}
-          showUserInfo={showUserInfo}
-          setShowUserInfo={setShowUserInfo}
-          handleRequestTokens={() => {}}
+
         />
       </div>
 

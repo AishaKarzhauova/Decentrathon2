@@ -4,32 +4,21 @@ import SidebarLayout from "../components/SidebarLayout";
 import "../pages/Dashboard.css";
 import "../pages/CreatePoll.css";
 
-
-
 const ProposalsList = () => {
   const [proposals, setProposals] = useState([]);
   const [message, setMessage] = useState("");
-  const [user, setUser] = useState(null);
-  const [agaBalance, setAgaBalance] = useState(null);
-  const [showUserInfo, setShowUserInfo] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
-    fetchUserAndProposals();
+    fetchProposals();
   }, []);
 
-  async function fetchUserAndProposals() {
+  async function fetchProposals() {
     try {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
 
-      const [userRes, proposalsRes] = await Promise.all([
-        axios.get("http://127.0.0.1:8000/user/me", { headers }),
-        axios.get("http://127.0.0.1:8000/polls/proposals", { headers }),
-      ]);
-
-      setUser(userRes.data);
-      setAgaBalance(userRes.data.balance || null);
+      const proposalsRes = await axios.get("http://127.0.0.1:8000/polls/proposals", { headers });
 
       const now = new Date();
       const filtered = proposalsRes.data.filter((proposal) => {
@@ -51,25 +40,14 @@ const ProposalsList = () => {
     try {
       const token = localStorage.getItem("token");
 
-      // Step 1: Approve in DB
-      await axios.post(
-        `http://127.0.0.1:8000/polls/approve/${proposalId}`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.post(`http://127.0.0.1:8000/polls/approve/${proposalId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      // Step 2: Send to smart contract
-      await axios.post(
-        `http://127.0.0.1:8000/polls/send-to-contract/${proposalId}`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.post(`http://127.0.0.1:8000/polls/send-to-contract/${proposalId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      // Step 3: Update frontend state
       setProposals((prev) =>
         prev.map((p) =>
           p.id === proposalId
@@ -133,13 +111,7 @@ const ProposalsList = () => {
   return (
     <div className="dashboard-container" style={{ fontFamily: "'Montserrat', sans-serif" }}>
       <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
-        <SidebarLayout
-          user={user}
-          agaBalance={agaBalance}
-          showUserInfo={showUserInfo}
-          setShowUserInfo={setShowUserInfo}
-          handleRequestTokens={() => {}}
-        />
+        <SidebarLayout />
       </div>
 
       <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn">
@@ -176,73 +148,73 @@ const ProposalsList = () => {
             <p style={{ textAlign: "center" }}>No proposals found.</p>
           ) : (
             <table
-  style={{
-    width: "100%",
-    borderCollapse: "separate",
-    borderSpacing: "0 16px",
-    tableLayout: "fixed", // 👈 forces even spacing
-  }}
->
-  <thead>
-    <tr style={{ background: "#f4f4f4" }}>
-      <th style={{ ...thTdStyle, width: "25%" }}>Poll Name</th>
-      <th style={{ ...thTdStyle, width: "30%" }}>Description</th>
-      <th style={{ ...thTdStyle, width: "25%" }}>Options</th>
-      <th style={{ ...thTdStyle, width: "20%", textAlign: "center" , paddingRight: "60px"}}>Actions</th> {/* 👈 RIGHT align */}
-    </tr>
-  </thead>
-  <tbody>
-    {proposals.map((proposal) => (
-      <tr
-        key={proposal.id}
-        style={{
-          background: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-        }}
-      >
-        <td style={thTdStyle}>{proposal.name}</td>
-        <td style={thTdStyle}>{proposal.description || "No description"}</td>
-        <td style={{ ...thTdStyle, paddingRight: "10px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            {proposal.candidates.map((c, i) => (
-              <span key={i}>{c}</span> // 👈 no bullets
-            ))}
-          </div>
-        </td>
-        <td style={{ ...thTdStyle, textAlign: "right" }}> {/* 👈 right align buttons */}
-          {!proposal.approved_by_admin ? (
-            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
-              <button
-                style={approveButtonStyle}
-                onMouseEnter={(e) => (e.target.style.opacity = 0.9)}
-                onMouseLeave={(e) => (e.target.style.opacity = 1)}
-                onClick={() => approvePoll(proposal.id)}
-              >
-                Approve
-              </button>
-              <button
-                style={rejectButtonStyle}
-                onMouseEnter={(e) => (e.target.style.opacity = 0.9)}
-                onMouseLeave={(e) => (e.target.style.opacity = 1)}
-                onClick={() => rejectPoll(proposal.id)}
-              >
-                Reject
-              </button>
-            </div>
-          ) : proposal.approved ? (
-            <span style={{ fontWeight: 600, color: "#4caf50" }}>In Contract ✅</span>
-          ) : (
-            <span style={{ fontWeight: 600, color: "#ff9800" }}>
-              Pending Approval<span className="dot-animation" style={{ display: "inline-block", minWidth: "1.5em" }} />
-            </span>
-          )}
-        </td>
-      </tr>
-    ))}
-  </tbody>
-</table>
-
+              style={{
+                width: "100%",
+                borderCollapse: "separate",
+                borderSpacing: "0 16px",
+                tableLayout: "fixed",
+              }}
+            >
+              <thead>
+                <tr style={{ background: "#f4f4f4" }}>
+                  <th style={{ ...thTdStyle, width: "25%" }}>Poll Name</th>
+                  <th style={{ ...thTdStyle, width: "30%" }}>Description</th>
+                  <th style={{ ...thTdStyle, width: "25%" }}>Options</th>
+                  <th style={{ ...thTdStyle, width: "20%", textAlign: "center", paddingRight: "60px" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {proposals.map((proposal) => (
+                  <tr
+                    key={proposal.id}
+                    style={{
+                      background: "#fff",
+                      borderRadius: "8px",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                    }}
+                  >
+                    <td style={thTdStyle}>{proposal.name}</td>
+                    <td style={thTdStyle}>{proposal.description || "No description"}</td>
+                    <td style={{ ...thTdStyle, paddingRight: "10px" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        {proposal.candidates.map((c, i) => (
+                          <span key={i}>{c}</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td style={{ ...thTdStyle, textAlign: "right" }}>
+                      {!proposal.approved_by_admin ? (
+                        <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                          <button
+                            style={approveButtonStyle}
+                            onMouseEnter={(e) => (e.target.style.opacity = 0.9)}
+                            onMouseLeave={(e) => (e.target.style.opacity = 1)}
+                            onClick={() => approvePoll(proposal.id)}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            style={rejectButtonStyle}
+                            onMouseEnter={(e) => (e.target.style.opacity = 0.9)}
+                            onMouseLeave={(e) => (e.target.style.opacity = 1)}
+                            onClick={() => rejectPoll(proposal.id)}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      ) : proposal.approved ? (
+                        <span style={{ fontWeight: 600, color: "#4caf50" }}>In Contract ✅</span>
+                      ) : (
+                        <span style={{ fontWeight: 600, color: "#ff9800" }}>
+                          Pending Approval
+                          <span className="dot-animation" style={{ display: "inline-block", minWidth: "1.5em" }} />
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       </div>

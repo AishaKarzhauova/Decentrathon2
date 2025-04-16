@@ -6,13 +6,10 @@ import "../pages/Dashboard.css";
 const VoteHistory = () => {
   const [history, setHistory] = useState([]);
   const [polls, setPolls] = useState([]);
-  const [user, setUser] = useState(null);
-  const [agaBalance, setAgaBalance] = useState(null);
-  const [showUserInfo, setShowUserInfo] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [onchainPolls, setOnchainPolls] = useState([]);
-  const [onchainLoading, setOnchainLoading] = useState(true); // 🆕
+  const [onchainLoading, setOnchainLoading] = useState(true);
   const [loadingDots, setLoadingDots] = useState(".");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (!onchainLoading) return;
@@ -24,21 +21,17 @@ const VoteHistory = () => {
     return () => clearInterval(interval);
   }, [onchainLoading]);
 
-
   useEffect(() => {
     const fetchAll = async () => {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
 
       try {
-        const [userRes, historyRes, pollsRes] = await Promise.all([
-          axios.get("http://127.0.0.1:8000/user/me", { headers }),
+        const [historyRes, pollsRes] = await Promise.all([
           axios.get("http://127.0.0.1:8000/votes/vote-history", { headers }),
           axios.get("http://127.0.0.1:8000/polls/list/", { headers }),
         ]);
 
-        setUser(userRes.data);
-        setAgaBalance(userRes.data.balance || null);
         setHistory(historyRes.data);
         setPolls(pollsRes.data);
       } catch (error) {
@@ -49,22 +42,20 @@ const VoteHistory = () => {
     fetchAll();
   }, []);
 
-    useEffect(() => {
-      const fetchOnchainPolls = async () => {
-        try {
-          const response = await axios.get("http://127.0.0.1:8000/polls/list/onchain/");
-          setOnchainPolls(response.data);
-        } catch (err) {
-          console.error("Failed to fetch on-chain polls:", err);
-        } finally {
-          setOnchainLoading(false); // ✅ mark done
-        }
-      };
+  useEffect(() => {
+    const fetchOnchainPolls = async () => {
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/polls/list/onchain/");
+        setOnchainPolls(response.data);
+      } catch (err) {
+        console.error("Failed to fetch on-chain polls:", err);
+      } finally {
+        setOnchainLoading(false);
+      }
+    };
 
-      fetchOnchainPolls();
-    }, []);
-
-
+    fetchOnchainPolls();
+  }, []);
 
   const headingStyle = {
     fontSize: "28px",
@@ -91,13 +82,7 @@ const VoteHistory = () => {
   return (
     <div className="dashboard-container" style={{ fontFamily: "'Montserrat', sans-serif" }}>
       <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
-        <SidebarLayout
-          user={user}
-          agaBalance={agaBalance}
-          showUserInfo={showUserInfo}
-          setShowUserInfo={setShowUserInfo}
-          handleRequestTokens={() => {}}
-        />
+        <SidebarLayout />
       </div>
 
       <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn">
@@ -137,11 +122,11 @@ const VoteHistory = () => {
                   const name = poll?.name || "Untitled";
                   const date = new Date(entry.timestamp);
                   const matchingPoll = onchainPolls.find((p) => p.id === entry.poll_id);
-                    const status = matchingPoll?.active === true
-                      ? "Active"
-                      : matchingPoll?.active === false
-                      ? "Inactive"
-                      : "Unknown";
+                  const status = matchingPoll?.active === true
+                    ? "Active"
+                    : matchingPoll?.active === false
+                    ? "Inactive"
+                    : "Unknown";
 
                   return (
                     <tr key={entry.poll_id}>
@@ -172,9 +157,6 @@ const VoteHistory = () => {
                           <span style={{ color: "darkred", fontWeight: 600 }}>Unknown</span>
                         )}
                       </td>
-
-
-
                     </tr>
                   );
                 })}

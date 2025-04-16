@@ -10,9 +10,6 @@ const PollDetail = () => {
   const { pollId } = useParams();
   const [poll, setPoll] = useState(null);
   const [message, setMessage] = useState("");
-  const [user, setUser] = useState(null);
-  const [agaBalance, setAgaBalance] = useState(null);
-  const [showUserInfo, setShowUserInfo] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -44,7 +41,6 @@ const PollDetail = () => {
 
   useEffect(() => {
     fetchPoll();
-    fetchUserData();
   }, []);
 
   const fetchPoll = async () => {
@@ -58,19 +54,6 @@ const PollDetail = () => {
     }
   };
 
-  const fetchUserData = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get("http://127.0.0.1:8000/user/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUser(res.data);
-      const bal = await axios.get(`http://127.0.0.1:8000/user/balance/${res.data.wallet_address}`);
-      setAgaBalance(bal.data.balance);
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
 const navButtonStyle = {
   padding: "12px 20px",
@@ -127,13 +110,7 @@ const navButtonStyle = {
   return (
     <div className="dashboard-container" style={{ fontFamily: "'Montserrat', sans-serif" }}>
       <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
-        <SidebarLayout
-          user={user}
-          agaBalance={agaBalance}
-          showUserInfo={showUserInfo}
-          setShowUserInfo={setShowUserInfo}
-          handleRequestTokens={() => {}}
-        />
+        <SidebarLayout />
       </div>
 
       <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn">
@@ -148,7 +125,7 @@ const navButtonStyle = {
               <h3 style={{ textAlign: "center", fontWeight: 600, fontSize: "20px", marginBottom: "10px" }}>
                 {poll.name}
               </h3>
-              <p style={{ textAlign: "center", fontStyle: "italic", marginBottom: "20px" }}>
+              <p style={{ textAlign: "center", fontStyle: "italic", marginBottom: "20px", fontSize: "0.95rem", color: "#5e5e5e"}}>
                 {poll.description}
               </p>
 

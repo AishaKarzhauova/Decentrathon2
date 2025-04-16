@@ -38,31 +38,6 @@ const AdminDashboard = () => {
         fetchPolls();
     }, []);
 
-    useEffect(() => {
-        const fetchUserData = async () => {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                navigate("/");
-                return;
-            }
-
-            try {
-                const response = await axios.get("http://127.0.0.1:8000/user/me", {
-                    headers: {Authorization: `Bearer ${token}`}
-                });
-                setUser(response.data);
-
-                const balanceResponse = await axios.get(`http://127.0.0.1:8000/user/balance/${response.data.wallet_address}`);
-                setAgaBalance(balanceResponse.data.balance);
-            } catch (error) {
-                console.error("Error loading user:", error);
-                localStorage.removeItem("token");
-                navigate("/");
-            }
-        };
-
-        fetchUserData();
-    }, [navigate]);
 
     const chartData = [
       { name: "Active Polls", value: activePolls.length },
@@ -163,11 +138,6 @@ const AdminDashboard = () => {
         <div className="dashboard-container">
             <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
                 <SidebarLayout
-                    user={user}
-                    agaBalance={agaBalance}
-                    showUserInfo={showUserInfo}
-                    setShowUserInfo={setShowUserInfo}
-                    handleRequestTokens={() => {}}
                 />
             </div>
 
