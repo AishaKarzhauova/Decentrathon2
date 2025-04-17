@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import SidebarLayout from "../components/SidebarLayout";
+import "./TokenRequests.css";
 
 const TokenRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -51,7 +52,7 @@ const TokenRequests = () => {
   };
 
   return (
-    <div className="dashboard-container" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+    <div className="dashboard-container token-requests-container">
       <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
         <SidebarLayout
           user={user}
@@ -68,113 +69,51 @@ const TokenRequests = () => {
         {sidebarCollapsed ? "→" : "←"}
       </button>
 
-      <div className="main-content" style={{ padding: "40px", width: "100%" }}>
-        <div
-          style={{
-            background: "#fff",
-            padding: "40px",
-            borderRadius: "12px",
-            boxShadow: "0 0 20px rgba(0,0,0,0.05)",
-            width: "100%",
-            maxWidth: "900px",
-            margin: "0 auto",
-          }}
-        >
-          <h2
-            style={{
-              textAlign: "center",
-              fontSize: "26px",
-              fontWeight: 700,
-              marginBottom: "30px",
-              background: "linear-gradient(90deg, #6e8efb, #a777e3)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            Token Requests
-          </h2>
+      <div className="main-content token-requests-main">
+        <div className="token-requests-box">
+          <h2 className="token-requests-heading">Token Requests</h2>
 
           {requests.length === 0 ? (
-            <p style={{ textAlign: "center" }}>No new requests</p>
+            <p className="no-requests">No new requests</p>
           ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-  <thead>
-    <tr style={{ backgroundColor: "#f9f9f9", borderBottom: "1px solid #ddd" }}>
-      <th style={{ textAlign: "left", padding: "12px", width: "33%" }}>User ID</th>
-      <th style={{ textAlign: "left", padding: "12px", width: "33%" }}>Username</th>
-      <th style={{ textAlign: "left", padding: "12px", width: "34%" , paddingLeft: "70px"}}>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {requests.map((req) => (
-      <tr
-        key={req.id}
-        style={{
-          backgroundColor: "#fff",
-          borderBottom: "1px solid #eee",
-          transition: "0.2s ease",
-        }}
-      >
-        <td style={{ padding: "14px", fontWeight: 600 }}>{req.id}</td>
-        <td style={{ padding: "14px" }}>{req.nickname}</td>
-        <td style={{ padding: "14px" }}>
-          <div style={{ display: "flex", gap: "12px" }}>
-            <button
-  onClick={() => handleApprove(req.id)}
-  style={{
-    background: "linear-gradient(90deg, #6e8efb, #a777e3)",
-    color: "#fff",
-    border: "none",
-    borderRadius: "10px",
-    padding: "12px 24px",           // width & height via padding
-    height: "45px",                 // fixed height
-    minWidth: "100px",
-    cursor: "pointer",
-    fontWeight: 600,
-    fontSize: "15px",
-    transition: "all 0.2s ease",
-  }}
-  onMouseEnter={(e) => (e.target.style.opacity = "0.85")}
-  onMouseLeave={(e) => (e.target.style.opacity = "1")}
->
-  Approve
-</button>
+            <table className="token-requests-table">
+              <thead>
+                  <tr>
+                    <th className="table-cell left">User ID</th>
+                    <th className="table-cell center">Username</th>
+                    <th className="table-cell right" style={{paddingRight: "97px"}}>Actions</th>
+                  </tr>
+              </thead>
 
-<button
-  onClick={() => handleReject(req.id)}
-  style={{
-    background: "linear-gradient(90deg, #f06292, #ef5350)",
-    color: "#fff",
-    border: "none",
-    borderRadius: "10px",
-    padding: "12px 24px",           // width & height via padding
-    height: "45px",                 // fixed height
-    minWidth: "100px",
-    cursor: "pointer",
-    fontWeight: 600,
-    fontSize: "15px",
-    transition: "all 0.2s ease",
-  }}
-  onMouseEnter={(e) => (e.target.style.opacity = "0.85")}
-  onMouseLeave={(e) => (e.target.style.opacity = "1")}
->
-  Reject
-</button>
+              <tbody>
+                  {requests.map((req) => (
+                    <tr key={req.id} className="token-requests-row">
+                      <td className="table-cell left bold">{req.id}</td>
+                      <td className="table-cell center">{req.nickname}</td>
+                      <td className="table-cell right">
+                        <div className="token-requests-actions">
+                          <button
+                            className="token-requests-btn approve"
+                            onClick={() => handleApprove(req.id)}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            className="token-requests-btn reject"
+                            onClick={() => handleReject(req.id)}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
 
-          </div>
-        </td>
-      </tr>
-    ))}
-  </tbody>
-</table>
-
+            </table>
           )}
 
-          {message && (
-            <p style={{ color: "red", textAlign: "center", marginTop: "20px" }}>
-              {message}
-            </p>
-          )}
+          {message && <p className="token-requests-message">{message}</p>}
         </div>
       </div>
     </div>

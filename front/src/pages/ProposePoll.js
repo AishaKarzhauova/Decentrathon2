@@ -61,79 +61,30 @@ const ProposePoll = () => {
     }
   };
 
-  const containerStyle = {
-    background: "#fff",
-    padding: "40px",
-    borderRadius: "12px",
-    maxWidth: "700px",
-    margin: "0 auto",
-    boxShadow: "0 0 20px rgba(0,0,0,0.05)",
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-  };
-
-  const headingStyle = {
-    fontSize: "28px",
-    fontWeight: 600,
-    textAlign: "center",
-    marginBottom: "15px",
-    background: "linear-gradient(90deg, #6e8efb, #a777e3)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-  };
-
-  const inputStyle = {
-    padding: "14px",
-    borderRadius: "6px",
-    border: "1px solid #ccc",
-    fontSize: "1rem",
-    width: "100%",
-    boxSizing: "border-box",
-  };
-
-  const buttonStyle = {
-    padding: "14px",
-    borderRadius: "8px",
-    fontWeight: "bold",
-    fontSize: "16px",
-    background: "linear-gradient(90deg, #6e8efb, #a777e3)",
-    border: "none",
-    color: "#fff",
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-    width: "100%",
-  };
-
-  const messageStyle = {
-    background: "#f1f1f1",
-    padding: "10px",
-    borderRadius: "6px",
-    textAlign: "center",
-    fontWeight: 500,
-  };
-
   return (
-    <div className="dashboard-container">
+    <div className="dashboard-container montserrat-font">
       <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
         <SidebarLayout />
       </div>
 
-      <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn">
+      <button
+        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+        className="collapse-btn"
+      >
         {sidebarCollapsed ? "→" : "←"}
       </button>
 
-      <div className="main-content">
-        <div style={containerStyle}>
-          <h2 style={headingStyle}>Propose a Poll</h2>
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div className="main-content page-centered">
+        <div className="poll-form-container">
+          <h2 className="poll-form-heading">Propose a Poll</h2>
+          <form onSubmit={handleSubmit} className="poll-form">
             <input
               type="text"
               placeholder="Poll Title"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              style={inputStyle}
+              className="poll-input"
             />
 
             <textarea
@@ -141,7 +92,7 @@ const ProposePoll = () => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               required
-              style={{ ...inputStyle, minHeight: "80px", resize: "vertical" }}
+              className="poll-input textarea"
             />
 
             <TransitionGroup>
@@ -149,27 +100,20 @@ const ProposePoll = () => {
                 const nodeRef = React.createRef();
                 return (
                   <CSSTransition key={index} nodeRef={nodeRef} timeout={300} classNames="fade">
-                    <div ref={nodeRef} style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+                    <div ref={nodeRef} className="candidate-input-group">
                       <input
                         type="text"
                         placeholder={`Candidate ${index + 1}`}
                         value={candidate}
                         onChange={(e) => handleChange(e, index)}
                         required
-                        style={inputStyle}
+                        className="poll-input"
                       />
                       {candidates.length > 2 && (
                         <button
                           type="button"
+                          className="remove-candidate-btn"
                           onClick={() => removeCandidate(index)}
-                          style={{
-                            ...buttonStyle,
-                            width: "40px",
-                            padding: "0",
-                            fontSize: "20px",
-                            background: "#eee",
-                            color: "#444",
-                          }}
                         >
                           −
                         </button>
@@ -181,46 +125,23 @@ const ProposePoll = () => {
             </TransitionGroup>
 
             {candidates.length < 8 && (
-              <button
-                type="button"
-                onClick={addCandidate}
-                style={buttonStyle}
-                onMouseEnter={(e) => (e.target.style.opacity = "0.85")}
-                onMouseLeave={(e) => (e.target.style.opacity = "1")}
-              >
+              <button type="button" onClick={addCandidate} className="gradient-button">
                 + Add Candidate
               </button>
             )}
 
-            <button
-              type="submit"
-              style={buttonStyle}
-              onMouseEnter={(e) => (e.target.style.opacity = "0.85")}
-              onMouseLeave={(e) => (e.target.style.opacity = "1")}
-            >
+            <button type="submit" className="gradient-button">
               Submit Proposal
             </button>
           </form>
 
           {message && (
             <div>
-              <p style={messageStyle}>{message}</p>
+              <p className="poll-message-box">{message}</p>
               <div style={{ display: "flex", justifyContent: "center" }}>
                 <button
                   onClick={() => navigate("/dashboard")}
-                  style={{
-                    marginTop: "15px",
-                    padding: "12px 20px",
-                    fontSize: "16px",
-                    fontWeight: "bold",
-                    borderRadius: "8px",
-                    border: "none",
-                    background: "linear-gradient(90deg, #6e8efb, #a777e3)",
-                    color: "white",
-                    cursor: "pointer",
-                  }}
-                  onMouseEnter={(e) => (e.target.style.opacity = "0.85")}
-                  onMouseLeave={(e) => (e.target.style.opacity = "1")}
+                  className="back-dashboard-btn"
                 >
                   Back to Dashboard
                 </button>

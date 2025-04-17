@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import SidebarLayout from "../components/SidebarLayout";
 import { FaVoteYea, FaLock } from "react-icons/fa";
 import "../pages/Dashboard.css";
+import "./PollsList.css";
 
 const PollsList = () => {
   const [polls, setPolls] = useState([]);
@@ -70,7 +71,7 @@ const PollsList = () => {
   };
 
   return (
-    <div className="dashboard-container" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+    <div className="dashboard-container pollslist-font">
       <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
         <SidebarLayout />
       </div>
@@ -79,58 +80,19 @@ const PollsList = () => {
         {sidebarCollapsed ? "→" : "←"}
       </button>
 
-      <div className="main-content" style={{ padding: "40px", width: "100%" }}>
-        <div
-          style={{
-            background: "#fff",
-            padding: "40px",
-            borderRadius: "12px",
-            boxShadow: "0 0 20px rgba(0,0,0,0.05)",
-            width: "100%",
-            maxWidth: "800px",
-            margin: "0 auto",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "30px",
-            }}
-          >
-            <h1
-              style={{
-                fontSize: "28px",
-                fontWeight: 700,
-                background: "linear-gradient(90deg, #6e8efb, #a777e3)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                margin: 0,
-              }}
-            >
-              List of Polls
-            </h1>
-
-            <span
-              style={{
-                fontWeight: 600,
-                background: "linear-gradient(90deg, #6e8efb, #a777e3)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                fontSize: "23px",
-              }}
-            >
-              Total number of polls: {polls.length}
-            </span>
+      <div className="main-content pollslist-content">
+        <div className="pollslist-box">
+          <div className="pollslist-header">
+            <h1 className="pollslist-heading">List of Polls</h1>
+            <span className="pollslist-count">Total number of polls: {polls.length}</span>
           </div>
 
           {loading || loadingStatuses ? (
-            <p style={{ textAlign: "center" }}>Loading polls...</p>
+            <p className="pollslist-loading">Loading polls...</p>
           ) : polls.length === 0 ? (
-            <p style={{ textAlign: "center" }}>No polls available.</p>
+            <p className="pollslist-empty">No polls available.</p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div className="pollslist-items">
               {polls.map((poll, index) => {
                 const isHover = index === hoveredIndex;
                 const isActive = poll.active;
@@ -140,60 +102,22 @@ const PollsList = () => {
                     key={poll.id}
                     onMouseEnter={() => setHoveredIndex(index)}
                     onMouseLeave={() => setHoveredIndex(null)}
-                    className="poll-card"
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "16px 20px",
-                      borderRadius: "10px",
-                      border: "1px solid #eee",
-                      backgroundColor: isHover ? "#f9f9f9" : "#fff",
-                      boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-                      cursor: isActive ? "pointer" : "default",
-                      transition: "0.2s ease",
-                    }}
+                    className={`pollslist-item ${isHover ? "hovered" : ""}`}
                   >
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: "1.1rem" }}>
-                        {poll.name}
-                      </div>
-                      <div style={{ fontSize: "0.95rem", color: "#5e5e5e", marginTop: "4px" }}>
-                        {poll.description}
-                      </div>
+                    <div className="pollslist-info">
+                      <div className="pollslist-name">{poll.name}</div>
+                      <div className="pollslist-description">{poll.description}</div>
                     </div>
 
                     {isActive ? (
                       <button
                         onClick={() => handlePollClick(poll.id)}
-                        style={{
-                          background: "linear-gradient(90deg, #6e8efb, #a777e3)",
-                          border: "none",
-                          borderRadius: "10px",
-                          color: "#fff",
-                          fontWeight: 600,
-                          padding: "10px 18px",
-                          fontSize: "1rem",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          cursor: "pointer",
-                        }}
+                        className="pollslist-button"
                       >
                         <FaVoteYea size={18} />
                       </button>
                     ) : (
-                      <div
-                        style={{
-                          background: "linear-gradient(90deg, #bdbdbd, #999)",
-                          borderRadius: "10px",
-                          padding: "10px 18px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          cursor: "default",
-                        }}
-                      >
+                      <div className="pollslist-locked">
                         <FaLock size={20} color="#fff" />
                       </div>
                     )}
@@ -204,7 +128,7 @@ const PollsList = () => {
           )}
 
           {message && (
-            <p style={{ marginTop: "20px", textAlign: "center", color: "red" }}>{message}</p>
+            <p className="pollslist-error">{message}</p>
           )}
         </div>
       </div>

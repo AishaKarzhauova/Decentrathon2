@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import SidebarLayout from "../components/SidebarLayout";
 import "../pages/Dashboard.css";
+import "./VoteHistory.css";
 
 const VoteHistory = () => {
   const [history, setHistory] = useState([]);
@@ -57,28 +58,6 @@ const VoteHistory = () => {
     fetchOnchainPolls();
   }, []);
 
-  const headingStyle = {
-    fontSize: "28px",
-    fontWeight: 600,
-    textAlign: "center",
-    marginBottom: "20px",
-    background: "linear-gradient(90deg, #6e8efb, #a777e3)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-  };
-
-  const tableStyle = {
-    width: "100%",
-    borderCollapse: "collapse",
-    fontSize: "16px",
-  };
-
-  const thTdStyle = {
-    padding: "12px",
-    borderBottom: "1px solid #eee",
-    textAlign: "left",
-  };
-
   return (
     <div className="dashboard-container" style={{ fontFamily: "'Montserrat', sans-serif" }}>
       <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
@@ -90,30 +69,20 @@ const VoteHistory = () => {
       </button>
 
       <div className="main-content" style={{ padding: "40px", width: "100%" }}>
-        <div
-          style={{
-            background: "#fff",
-            padding: "40px",
-            borderRadius: "12px",
-            boxShadow: "0 0 20px rgba(0,0,0,0.05)",
-            width: "100%",
-            maxWidth: "1000px",
-            margin: "0 auto",
-          }}
-        >
-          <h2 style={headingStyle}>Your Voting History</h2>
+        <div className="vote-history-container">
+          <h2 className="vote-history-heading">Your Voting History</h2>
 
           {history.length === 0 ? (
             <p style={{ textAlign: "center" }}>You haven’t participated in any polls yet.</p>
           ) : (
-            <table style={tableStyle}>
+            <table className="vote-history-table">
               <thead>
                 <tr style={{ background: "#f4f4f4" }}>
-                  <th style={thTdStyle}>Poll ID</th>
-                  <th style={thTdStyle}>Poll Name</th>
-                  <th style={thTdStyle}>Date</th>
-                  <th style={thTdStyle}>Time</th>
-                  <th style={thTdStyle}>Status</th>
+                  <th className="vote-history-thtd">Poll ID</th>
+                  <th className="vote-history-thtd">Poll Name</th>
+                  <th className="vote-history-thtd">Date</th>
+                  <th className="vote-history-thtd">Time</th>
+                  <th className="vote-history-thtd">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -130,31 +99,21 @@ const VoteHistory = () => {
 
                   return (
                     <tr key={entry.poll_id}>
-                      <td style={thTdStyle}>#{entry.poll_id}</td>
-                      <td style={thTdStyle}>{name}</td>
-                      <td style={thTdStyle}>{date.toLocaleDateString()}</td>
-                      <td style={thTdStyle}>{date.toLocaleTimeString()}</td>
-                      <td style={thTdStyle}>
+                      <td className="vote-history-thtd">#{entry.poll_id}</td>
+                      <td className="vote-history-thtd">{name}</td>
+                      <td className="vote-history-thtd">{date.toLocaleDateString()}</td>
+                      <td className="vote-history-thtd">{date.toLocaleTimeString()}</td>
+                      <td className="vote-history-thtd">
                         {onchainLoading ? (
-                          <span
-                            style={{
-                              fontWeight: 600,
-                              fontStyle: "italic",
-                              background: "linear-gradient(90deg, #6e8efb, #a777e3)",
-                              WebkitBackgroundClip: "text",
-                              WebkitTextFillColor: "transparent",
-                              display: "inline-block",
-                              minWidth: "100px",
-                            }}
-                          >
+                          <span className="vote-history-status-loading">
                             Loading{loadingDots}
                           </span>
                         ) : status === "Active" ? (
-                          <span style={{ color: "green", fontWeight: 600 }}>Active</span>
+                          <span className="vote-history-status-active">Active</span>
                         ) : status === "Inactive" ? (
-                          <span style={{ color: "gray", fontWeight: 600 }}>Inactive</span>
+                          <span className="vote-history-status-inactive">Inactive</span>
                         ) : (
-                          <span style={{ color: "darkred", fontWeight: 600 }}>Unknown</span>
+                          <span className="vote-history-status-unknown">Unknown</span>
                         )}
                       </td>
                     </tr>
