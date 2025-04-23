@@ -25,7 +25,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   const filteredPolls = polls.filter((poll) =>
     poll.name.toLowerCase().includes(searchTerm.toLowerCase())

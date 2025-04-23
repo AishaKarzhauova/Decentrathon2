@@ -16,7 +16,7 @@ const CreatePoll = () => {
   const [message, setMessage] = useState("");
   const [user, setUser] = useState(null);
   const [agaBalance, setAgaBalance] = useState(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 

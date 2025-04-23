@@ -11,7 +11,7 @@ const ProposePoll = () => {
   const [description, setDescription] = useState("");
   const [candidates, setCandidates] = useState(["", ""]);
   const [message, setMessage] = useState("");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const navigate = useNavigate();
 
   const handleChange = (e, index) => {

@@ -12,7 +12,7 @@ const PollsList = () => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingStatuses, setLoadingStatuses] = useState(true);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   const navigate = useNavigate();
 

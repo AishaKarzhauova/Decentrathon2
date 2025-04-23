@@ -158,9 +158,9 @@
 .poll-hash-box {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 8px;
-  flex-wrap: wrap;
+  gap: 6px; /* reduce spacing */
+  flex-wrap: nowrap; /* prevent wrapping */
+  overflow-x: auto;
 }
 
 .poll-hash {

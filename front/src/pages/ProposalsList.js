@@ -9,7 +9,7 @@ import "./ProposalsList.css";
 const ProposalsList = () => {
   const [proposals, setProposals] = useState([]);
   const [message, setMessage] = useState("");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   useEffect(() => {
     fetchProposals();

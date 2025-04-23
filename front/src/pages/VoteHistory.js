@@ -10,7 +10,7 @@ const VoteHistory = () => {
   const [onchainPolls, setOnchainPolls] = useState([]);
   const [onchainLoading, setOnchainLoading] = useState(true);
   const [loadingDots, setLoadingDots] = useState(".");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   useEffect(() => {
     if (!onchainLoading) return;

@@ -11,7 +11,7 @@ const PollDetail = () => {
   const { pollId } = useParams();
   const [poll, setPoll] = useState(null);
   const [message, setMessage] = useState("");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const TOKEN_ADDRESS = "0x024b770fd5E43258363651B5545efbf080d0775F";

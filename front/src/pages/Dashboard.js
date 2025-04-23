@@ -25,7 +25,7 @@ const Dashboard = () => {
   const [message, setMessage] = useState("");
   const [searchActive, setSearchActive] = useState(false);
   const [latestPolls, setLatestPolls] = useState([]);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [mostVotedPoll, setMostVotedPoll] = useState(null);
   const [allOpenPolls, setAllOpenPolls] = useState([]);
   const [showNotification, setShowNotification] = useState(false);

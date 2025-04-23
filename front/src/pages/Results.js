@@ -9,7 +9,7 @@ const Results = () => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [expandedRows, setExpandedRows] = useState({});
 
   const toggleExpand = (pollName, type) => {

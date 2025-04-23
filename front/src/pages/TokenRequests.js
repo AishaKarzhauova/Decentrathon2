@@ -9,7 +9,7 @@ const TokenRequests = () => {
   const [user, setUser] = useState(null);
   const [agaBalance, setAgaBalance] = useState(null);
   const [showUserInfo, setShowUserInfo] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   useEffect(() => {
     fetchRequests();
