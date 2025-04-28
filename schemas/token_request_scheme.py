@@ -1,8 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, TIMESTAMP, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-# from db import GlobalBase
-from schemas.base import GlobalBase
+from db import GlobalBase
 
 class TokenRequest(GlobalBase):
     __tablename__ = "token_requests"

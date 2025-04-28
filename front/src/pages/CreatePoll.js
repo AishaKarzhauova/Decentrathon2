@@ -75,33 +75,42 @@ const CreatePoll = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setMessage("Error: Not authorized.");
-      return;
-    }
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  const token = localStorage.getItem("token");
+  if (!token) {
+    setMessage("Error: Not authorized.");
+    return;
+  }
 
-    try {
-      const response = await axios.post("http://127.0.0.1:8000/polls/create", pollData, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  if (!user?.wallet_address) {
+    setMessage("Error: No wallet address found for user.");
+    return;
+  }
 
-      setMessage({
-        text: "Poll created successfully!",
-        hash: response.data.tx_hash,
-      });
-    } catch (error) {
-      setMessage(
-        "Error creating poll: " +
-          (error.response?.data?.detail || "Unknown error")
-      );
-    }
-  };
+  try {
+    const response = await axios.post("http://127.0.0.1:8000/polls/create", {
+      ...pollData,
+      wallet_address: user.wallet_address, // <-- ДОБАВЬ ЭТО
+    }, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    setMessage({
+      text: "Poll created successfully!",
+      hash: response.data.tx_hash,
+    });
+  } catch (error) {
+    setMessage(
+      "Error creating poll: " +
+      (error.response?.data?.detail || "Unknown error")
+    );
+  }
+};
+
 
   return (
     <div className="dashboard-container montserrat-font">

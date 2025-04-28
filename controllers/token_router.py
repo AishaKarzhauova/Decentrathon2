@@ -6,9 +6,11 @@ from schemas.token_request_scheme import TokenRequest
 from utils.dependencies import get_current_user, is_admin
 from web3 import Web3
 from pydantic import BaseModel
+from dotenv import load_dotenv
+import os
 
 router = APIRouter()
-
+load_dotenv()
 RPC_URL = "https://sepolia.infura.io/v3/cbfec6723c0b4264b5b3dcf5cba569e9"
 web3 = Web3(Web3.HTTPProvider(RPC_URL, {"timeout": 60}))
 

@@ -1,8 +1,7 @@
 from sqlalchemy import Column, Integer, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime
-# from db import GlobalBase
-from schemas.base import GlobalBase
+from db import GlobalBase
 
 class VoteHistory(GlobalBase):
     __tablename__ = "vote_history"

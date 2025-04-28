@@ -10,6 +10,9 @@ from schemas.proposed_poll_scheme import ProposedPoll
 from utils.dependencies import is_admin, get_current_user
 from web3 import Web3
 from pydantic import BaseModel
+from utils.email_sender import send_poll_status_email
+from schemas.user_scheme import User
+from schemas.notification_scheme import Notification
 import os
 
 router = APIRouter()
@@ -271,8 +274,7 @@ def create_poll(poll: PollCreate, db: Session = Depends(get_db), user: dict = De
         'nonce': nonce
     })
 
-    signed_tx = web3.eth.account.sign_transaction(tx,
-                                                  'b4cec174d98688e762355891cbc52759bf5996cb7b47057d1b151b68e9454209')
+    signed_tx = web3.eth.account.sign_transaction(tx,'b4cec174d98688e762355891cbc52759bf5996cb7b47057d1b151b68e9454209')
     tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
 
     new_poll = Poll(name=poll.name, candidates=poll.candidates, description=poll.description)
@@ -417,10 +419,16 @@ def propose_poll(poll_request: ProposedPollRequest, user: dict = Depends(get_cur
     if len(poll_request.candidates) < 2 or len(poll_request.candidates) > 8:
         raise HTTPException(status_code=400, detail="Количество кандидатов должно быть от 2 до 8")
 
+    # Находим пользователя по кошельку
+    user_db = db.query(User).filter(User.wallet_address == user["wallet_address"]).first()
+    if not user_db:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+
     proposed_poll = ProposedPoll(
         name=poll_request.name,
+        description=poll_request.description,
         candidates=poll_request.candidates,
-        description = poll_request.description
+        user_id=user_db.id  # 👈 Берем id из найденного пользователя
     )
 
     db.add(proposed_poll)
@@ -428,6 +436,7 @@ def propose_poll(poll_request: ProposedPollRequest, user: dict = Depends(get_cur
     db.refresh(proposed_poll)
 
     return {"message": "Предложение голосования отправлено на рассмотрение", "poll_id": proposed_poll.id}
+
 
 @router.get("/proposals")
 def get_proposed_polls(user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -448,19 +457,30 @@ def approve_proposed_poll(proposal_id: int, db: Session = Depends(get_db), user:
     if proposed_poll.approved_by_admin:
         raise HTTPException(status_code=400, detail="Голосование уже одобрено")
 
-    # Обновляем статус в БД
     proposed_poll.approved_by_admin = True
 
     new_poll = Poll(
         name=proposed_poll.name,
         candidates=proposed_poll.candidates,
-        description=proposed_poll.description  # ✅ добавляем описание
+        description=proposed_poll.description,
+        active=True,
+        group_id=proposed_poll.group_id
     )
     db.add(new_poll)
-    db.commit()
+
+    proposer = db.query(User).filter(User.id == proposed_poll.user_id).first()
+    if proposer:
+        send_poll_status_email(proposer.email, proposed_poll.name, "approved")
+        new_notification = Notification(
+            user_id=proposer.id,
+            title="✅ Poll Approved",
+            message=f"Your poll '{proposed_poll.name}' has been approved by admin!"
+        )
+        db.add(new_notification)
+
+    db.commit()  # ❗ Теперь только один раз сохраняем всё вместе
 
     return {"message": "Голосование одобрено администратором", "poll_id": proposal_id}
-
 
 
 @router.post("/send-to-contract/{proposal_id}")
@@ -501,8 +521,20 @@ def reject_proposed_poll(proposal_id: int, db: Session = Depends(get_db), user: 
     if not proposed_poll:
         raise HTTPException(status_code=404, detail="Предложенное голосование не найдено")
 
+    proposer = db.query(User).filter(User.id == proposed_poll.user_id).first()
+
+    if proposer:
+        send_poll_status_email(proposer.email, proposed_poll.name, "rejected")
+        new_notification = Notification(
+            user_id=proposer.id,
+            title="❌ Poll Rejected",
+            message=f"Your poll '{proposed_poll.name}' has been rejected by admin."
+        )
+        db.add(new_notification)
+
     db.delete(proposed_poll)
-    db.commit()
+
+    db.commit()  # ❗ один раз сохраняем и уведомление, и удаление
 
     return {"message": "Голосование успешно отклонено"}
 
@@ -519,3 +551,32 @@ def search_polls(name: str, db: Session = Depends(get_db)):
     if not polls:
         raise HTTPException(status_code=404, detail="Голосование не найдено")
     return polls
+
+
+@router.get("/group/{group_id}")
+def get_polls_by_group(group_id: int, db: Session = Depends(get_db)):
+    polls = db.query(Poll).filter(Poll.group_id == group_id).all()
+    return [
+        {
+            "id": poll.id,
+            "name": poll.name,
+            "description": poll.description,
+            "active": poll.active,
+        }
+        for poll in polls
+    ]
+
+
+@router.get("/group/{group_id}/polls")
+def get_polls_by_group(group_id: int, db: Session = Depends(get_db)):
+    polls = db.query(Poll).filter(Poll.group_id == group_id).all()
+    return [
+        {
+            "id": poll.id,
+            "name": poll.name,
+            "description": poll.description,
+            "candidates": poll.candidates,
+            "active": poll.active
+        }
+        for poll in polls
+    ]

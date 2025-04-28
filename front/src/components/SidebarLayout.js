@@ -3,6 +3,11 @@ import { useNavigate } from "react-router-dom";
 import "../pages/Dashboard.css";
 import agaLogo from "../assets/agapinklogo.png";
 import axios from "axios";
+import {
+  FaInfoCircle, FaCoins, FaLightbulb, FaUsers, FaVoteYea,
+  FaListAlt, FaHistory, FaChartBar, FaClipboardList,
+  FaMoneyCheckAlt, FaTools, FaSignOutAlt
+} from "react-icons/fa";
 
 const SidebarLayout = ({ children }) => {
     const navigate = useNavigate();
@@ -12,26 +17,25 @@ const SidebarLayout = ({ children }) => {
     const [showNotification, setShowNotification] = useState(false);
 
     const handleRequestTokens = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          console.error("No token found");
-          return;
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                console.error("No token found");
+                return;
+            }
+
+            const res = await axios.post("http://127.0.0.1:8000/tokens/request-tokens", {}, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            console.log("Request success:", res.data);
+            setShowNotification(true);
+            setTimeout(() => setShowNotification(false), 2500);
+        } catch (error) {
+            console.error("Token request failed:", error.response?.data || error.message);
+            alert("Token request failed.");
         }
-
-        const res = await axios.post("http://127.0.0.1:8000/tokens/request-tokens", {}, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        console.log("Request success:", res.data);
-        setShowNotification(true);
-        setTimeout(() => setShowNotification(false), 2500);
-      } catch (error) {
-        console.error("Token request failed:", error.response?.data || error.message);
-        alert("Token request failed.");
-      }
     };
-
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -63,47 +67,104 @@ const SidebarLayout = ({ children }) => {
             <div className="sidebar">
                 <div className="sidebar-scroll">
                     <img src={agaLogo} alt="Logo" className="logo" />
-                    <div className="user-icon">👤</div>
-                    <button className="user-info-button" onClick={() => setShowUserInfo(!showUserInfo)}>
-                        {showUserInfo ? "Hide Info" : "Show Info"}
-                    </button>
+                    {user?.avatar_hash ? (
+                        <img
+                            src={`https://api.dicebear.com/7.x/identicon/svg?seed=${user.avatar_hash}`}
+                            alt="Avatar"
+                            className="user-avatar"
+                        />
+                    ) : (
+                        <div className="user-icon">👤</div>
+                    )}
 
-                    <div className={`user-info-container ${showUserInfo ? "show" : ""}`}>
-                        {user && (
-                            <div className="user-info">
+                    <div className="sidebar-links">
+                      <div className="sidebar-link" onClick={() => setShowUserInfo(!showUserInfo)}>
+                        <FaInfoCircle className="sidebar-icon" />
+                        {showUserInfo ? "Hide Info" : "Show Info"}
+                      </div>
+
+                        {showUserInfo && user && (
+                            <div className="user-info-container show">
+                              <div className="user-info">
                                 <p><strong>Name:</strong> {user.first_name} {user.last_name}</p>
                                 <p><strong>Email:</strong> {user.email}</p>
-                                <p><strong>Wallet Address:</strong> {user.wallet_address}</p>
+                                <p><strong>Wallet:</strong> {user.wallet_address}</p>
                                 <p><strong>AGA Balance:</strong> {agaBalance !== null ? `${agaBalance} AGA` : "Loading..."}</p>
                                 <p><strong>Role:</strong> {user.role === "admin" ? "Administrator" : "User"}</p>
+                              </div>
                             </div>
-                        )}
-                    </div>
+                          )}
 
-                    <button className="sidebar-button" onClick={() => navigate("/polls")}>All Votings</button>
-                    <button className="sidebar-button" onClick={() => navigate("/results")}>View Results</button>
-                    <button className="sidebar-button" onClick={() => navigate("/vote-history")}>Voting History</button>
-
-                    {user?.role === "user" && (
+                      {user?.role === "user" && (
                         <>
-                            <button className="sidebar-button" onClick={handleRequestTokens}>Request 10 AGA</button>
-                            <button className="sidebar-button" onClick={() => navigate("/propose")}>Propose Voting</button>
+                          <div className="sidebar-link" onClick={handleRequestTokens}>
+                            <FaCoins className="sidebar-icon" />
+                            Request 10 AGA
+                          </div>
+                          <div className="sidebar-link" onClick={() => navigate("/propose")}>
+                            <FaLightbulb className="sidebar-icon" />
+                            Propose Voting
+                          </div>
+                          <div className="sidebar-link" onClick={() => navigate("/groups/create-poll")}>
+                            <FaUsers className="sidebar-icon" />
+                            Propose Group Poll
+                          </div>
+                          <div className="sidebar-link" onClick={() => navigate("/polls")}>
+                            <FaListAlt className="sidebar-icon" />
+                            All Votings
+                          </div>
+                          <div className="sidebar-link" onClick={() => navigate("/vote-history")}>
+                            <FaHistory className="sidebar-icon" />
+                            Voting History
+                          </div>
+                          <div className="sidebar-link" onClick={() => navigate("/results")}>
+                            <FaChartBar className="sidebar-icon" />
+                            View Results
+                          </div>
                         </>
-                    )}
+                      )}
 
-                    {user?.role === "admin" && (
+                      {user?.role === "admin" && (
                         <>
-                            <button className="sidebar-button" onClick={() => navigate("/create-poll")}>Create a Vote</button>
-                            <button className="sidebar-button" onClick={() => navigate("/proposals")}>View Proposals</button>
-                            <button className="sidebar-button" onClick={() => navigate("/token-requests")}>Token Requests</button>
-                            <button className="sidebar-button" onClick={() => navigate("/admin")}>Manage Polls</button>
+                          <div className="sidebar-link" onClick={() => navigate("/create-poll")}>
+                            <FaVoteYea className="sidebar-icon" />
+                            Create a Vote
+                          </div>
+                          <div className="sidebar-link" onClick={() => navigate("/polls")}>
+                            <FaListAlt className="sidebar-icon" />
+                            All Votings
+                          </div>
+                          <div className="sidebar-link" onClick={() => navigate("/vote-history")}>
+                            <FaHistory className="sidebar-icon" />
+                            Voting History
+                          </div>
+                          <div className="sidebar-link" onClick={() => navigate("/results")}>
+                            <FaChartBar className="sidebar-icon" />
+                            View Results
+                          </div>
+                          <div className="sidebar-link" onClick={() => navigate("/proposals")}>
+                            <FaClipboardList className="sidebar-icon" />
+                            View Proposals
+                          </div>
+                          <div className="sidebar-link" onClick={() => navigate("/token-requests")}>
+                            <FaMoneyCheckAlt className="sidebar-icon" />
+                            Token Requests
+                          </div>
+                          <div className="sidebar-link" onClick={() => navigate("/admin")}>
+                            <FaTools className="sidebar-icon" />
+                            Manage Polls
+                          </div>
                         </>
-                    )}
+                      )}
 
-                    <button className="sidebar-button" onClick={() => {
+                      <div className="sidebar-link" onClick={() => {
                         localStorage.removeItem("token");
                         navigate("/");
-                    }}>Logout</button>
+                      }}>
+                        <FaSignOutAlt className="sidebar-icon" />
+                        Logout
+                      </div>
+                    </div>
                 </div>
             </div>
 

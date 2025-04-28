@@ -8,9 +8,14 @@ from utils.email_sender import send_verification_email
 from utils.security import hash_password
 from web3 import Web3
 import string, random
+from dotenv import load_dotenv
+import os
+import hashlib
+
 
 router = APIRouter()
 
+load_dotenv()
 
 def get_db():
     db = SessionLocal()
@@ -26,6 +31,7 @@ web3 = Web3(Web3.HTTPProvider(RPC_URL, {"timeout": 60}))
 CONTRACT_ADDRESS = "0x024b770fd5E43258363651B5545efbf080d0775F"
 CREATOR_ADDRESS = "0xa21356475F98ABF66Fc39D390325e4002b75AEC4"
 PRIVATE_KEY = "b4cec174d98688e762355891cbc52759bf5996cb7b47057d1b151b68e9454209"
+
 TOKEN_ABI = [
     {"constant": False, "inputs": [{"name": "recipient", "type": "address"}, {"name": "amount", "type": "uint256"}],
      "name": "transfer", "outputs": [], "type": "function"},
@@ -65,11 +71,26 @@ def verify_user(data: VerificationData, db: Session = Depends(get_db)):
     record = temp_registrations.get(data.email)
     if not record:
         raise HTTPException(status_code=404, detail="Регистрация не найдена")
+
     if record["code"] != data.code:
         raise HTTPException(status_code=400, detail="Неверный код подтверждения")
 
     user_data = record["user_data"]
+
+    print("DEBUG user_data:", user_data)
+    print("DEBUG user_data wallet_address:", user_data.get("wallet_address"))
+    print("DEBUG full temp_registrations:", temp_registrations)
+
+    # ✅ Check if wallet_address exists
+    wallet_address = user_data.get("wallet_address")
+    if not wallet_address or not isinstance(wallet_address, str) or not wallet_address.startswith("0x"):
+        raise HTTPException(status_code=400, detail="Invalid wallet address. Please register again.")
+
+    wallet_address = Web3.to_checksum_address(wallet_address)  # 🛠 normalize here
+
     hashed_password = hash_password(user_data["password"])
+    email_hash = hashlib.md5(user_data["email"].strip().lower().encode('utf-8')).hexdigest()
+
     new_user = User(
         nickname=user_data["nickname"],
         first_name=user_data["first_name"],
@@ -77,7 +98,8 @@ def verify_user(data: VerificationData, db: Session = Depends(get_db)):
         email=user_data["email"],
         wallet_address=user_data["wallet_address"],
         password=hashed_password,
-        role="user"
+        role="user",
+        avatar_hash=email_hash
     )
     db.add(new_user)
     db.commit()
@@ -85,25 +107,21 @@ def verify_user(data: VerificationData, db: Session = Depends(get_db)):
 
     del temp_registrations[data.email]
 
+    # 2. Load from DB freshly
+    db_user = db.query(User).filter(User.email == data.email).first()
+    wallet_address = db_user.wallet_address
+
+    # 3. Send tokens
     try:
         nonce = web3.eth.get_transaction_count(CREATOR_ADDRESS, "pending")
-        gas_price = web3.eth.gas_price
+        gas_price = int(web3.eth.gas_price * 1.1)
 
-        # gasPrice на 10% для ускорения транзакции
-        gas_price = int(gas_price * 1.1)
-
-        tx = contract.functions.transfer(new_user.wallet_address, 10 * 10 ** 18).build_transaction({
+        tx = contract.functions.transfer(wallet_address, 10 * 10 ** 18).build_transaction({
             'from': CREATOR_ADDRESS,
             'gas': 100000,
             'gasPrice': gas_price,
             'nonce': nonce
         })
-
-        contract_balance = contract.functions.balanceOf(CREATOR_ADDRESS).call()
-        print(f"Баланс контракта: {Web3.from_wei(contract_balance, 'ether')} AGA")
-
-        balance_eth = web3.eth.get_balance(CREATOR_ADDRESS)
-        print(f"Баланс ETH: {Web3.from_wei(balance_eth, 'ether')} ETH")
 
         signed_tx = web3.eth.account.sign_transaction(tx, PRIVATE_KEY)
         tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
@@ -112,8 +130,9 @@ def verify_user(data: VerificationData, db: Session = Depends(get_db)):
             "message": "Регистрация подтверждена, 10 AGA начислены!",
             "tx_hash": web3.to_hex(tx_hash)
         }
-
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         db.delete(new_user)
         db.commit()
         raise HTTPException(status_code=500, detail=f"Ошибка при начислении токенов: {str(e)}")

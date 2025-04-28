@@ -48,3 +48,57 @@ CREATE TABLE vote_history (
     poll_id INTEGER REFERENCES polls(id) ON DELETE CASCADE,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Добавляем описание к активным голосованиям
+ALTER TABLE polls
+ADD COLUMN description TEXT DEFAULT '';
+
+-- Добавляем описание к предложенным голосованиям
+ALTER TABLE proposed_polls
+ADD COLUMN description TEXT DEFAULT '';
+
+ALTER TABLE proposed_polls ADD COLUMN approved_by_admin boolean DEFAULT false;
+
+CREATE TABLE groups (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    description TEXT,
+    owner_id INTEGER NOT NULL REFERENCES users(id)
+);
+
+CREATE TABLE group_members (
+    id SERIAL PRIMARY KEY,
+    group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role VARCHAR DEFAULT 'member'
+);
+
+CREATE TABLE group_join_requests (
+    id SERIAL PRIMARY KEY,
+    group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    accepted BOOLEAN DEFAULT FALSE
+);
+
+-- Если таблица polls уже существует, добавьте это поле:
+ALTER TABLE polls ADD COLUMN group_id INTEGER REFERENCES groups(id);
+
+ALTER TABLE proposed_polls ADD COLUMN group_id INTEGER;
+
+ALTER TABLE vote_history DROP COLUMN candidate ;
+
+ALTER TABLE users ADD COLUMN avatar_hash VARCHAR;
+ALTER TABLE proposed_polls ADD COLUMN user_id INTEGER REFERENCES users(id);
+
+
+ALTER TABLE proposed_polls
+ADD COLUMN creator_id INTEGER REFERENCES users(id);
+
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
