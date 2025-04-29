@@ -5,6 +5,7 @@ import SidebarLayout from "../components/SidebarLayout";
 import { FaVoteYea, FaLock } from "react-icons/fa";
 import "../pages/Dashboard.css";
 import "./PollsList.css";
+import {FaBars, FaTimes} from "react-icons/fa";
 
 const PollsList = () => {
   const [polls, setPolls] = useState([]);
@@ -77,7 +78,7 @@ const PollsList = () => {
       </div>
 
       <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn">
-        {sidebarCollapsed ? "→" : "←"}
+        {sidebarCollapsed ? <FaBars size={18} /> : <FaTimes size={18} />}
       </button>
 
       <div className="main-content pollslist-content">

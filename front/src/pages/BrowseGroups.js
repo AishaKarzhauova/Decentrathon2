@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
+import { FaUserPlus } from "react-icons/fa";
 
 const BrowseGroups = () => {
   const [groups, setGroups] = useState([]);
@@ -40,9 +41,6 @@ const BrowseGroups = () => {
 
   return (
     <div style={{ width: "100%", marginBottom: "40px" }}>
-      <h2 className="dashboard-heading" style={{ textAlign: "center", marginBottom: "30px" }}>
-        Browse All Groups
-      </h2>
 
       {message && (
         <p style={{ marginBottom: "20px", fontWeight: "bold", color: "#6e8efb", textAlign: "center" }}>
@@ -63,10 +61,11 @@ const BrowseGroups = () => {
               </p>
               <button
                 className="gradient-button"
-                style={{ marginLeft: "12px" }}
+                style={{ marginLeft: "12px", display: "flex", alignItems: "center", gap: "8px" }}
                 onClick={() => requestJoin(group.id)}
               >
-                ➕ Request to Join
+                <FaUserPlus />
+                Request to Join
               </button>
             </div>
           </li>

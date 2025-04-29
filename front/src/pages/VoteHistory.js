@@ -3,6 +3,7 @@ import axios from "axios";
 import SidebarLayout from "../components/SidebarLayout";
 import "../pages/Dashboard.css";
 import "./VoteHistory.css";
+import {FaBars, FaTimes} from "react-icons/fa";
 
 const VoteHistory = () => {
   const [history, setHistory] = useState([]);
@@ -65,7 +66,7 @@ const VoteHistory = () => {
       </div>
 
       <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn">
-        {sidebarCollapsed ? "→" : "←"}
+        {sidebarCollapsed ? <FaBars size={18} /> : <FaTimes size={18} />}
       </button>
 
       <div className="main-content" style={{ padding: "40px", width: "100%" }}>

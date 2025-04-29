@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import "../pages/Dashboard.css";
 import "../pages/CreatePoll.css";
 import { TransitionGroup, CSSTransition } from "react-transition-group";
-
+import {FaBars, FaTimes} from "react-icons/fa";
 const ProposePoll = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -67,11 +67,8 @@ const ProposePoll = () => {
         <SidebarLayout />
       </div>
 
-      <button
-        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-        className="collapse-btn"
-      >
-        {sidebarCollapsed ? "→" : "←"}
+      <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn">
+        {sidebarCollapsed ? <FaBars size={18} /> : <FaTimes size={18} />}
       </button>
 
       <div className="main-content page-centered">

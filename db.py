@@ -10,12 +10,12 @@ from schemas.proposed_poll_scheme import ProposedPoll
 from schemas.token_request_scheme import TokenRequest
 
 DATABASE_URL = "postgresql://aishakarzhauova:795430a@localhost:5432/blockchain_voting"
-# engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL, echo=True)
 #
-# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 #
 # print("Creating tables...")
-# GlobalBase.metadata.create_all(engine)
+GlobalBase.metadata.create_all(engine)
 # print("Tables created successfully!")
 #
 # def get_db():
@@ -25,8 +25,8 @@ DATABASE_URL = "postgresql://aishakarzhauova:795430a@localhost:5432/blockchain_v
 #     finally:
 #         db.close()
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# engine = create_engine(DATABASE_URL)
+# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def get_db():
@@ -37,5 +37,3 @@ def get_db():
         db.close()
 
 
-class GlobalBase(DeclarativeBase):
-    pass

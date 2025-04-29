@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import SidebarLayout from "../components/SidebarLayout";
 import "./TokenRequests.css";
+import {FaBars, FaTimes} from "react-icons/fa";
 
 const TokenRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -62,11 +63,8 @@ const TokenRequests = () => {
         />
       </div>
 
-      <button
-        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-        className="collapse-btn"
-      >
-        {sidebarCollapsed ? "→" : "←"}
+      <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn">
+        {sidebarCollapsed ? <FaBars size={18} /> : <FaTimes size={18} />}
       </button>
 
       <div className="main-content token-requests-main">

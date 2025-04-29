@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./Notifications.css";
+import { FaTrash } from "react-icons/fa";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -50,9 +51,7 @@ const Notifications = () => {
 
   return (
     <div style={{ width: "100%", marginBottom: "40px" }}>
-      <h2 className="dashboard-heading" style={{ textAlign: "center", marginBottom: "30px" }}>
-        Notifications
-      </h2>
+
 
       {message && (
         <p style={{ color: "red", textAlign: "center", marginBottom: "20px" }}>
@@ -62,7 +61,8 @@ const Notifications = () => {
 
       {notifications.length > 0 ? (
         <>
-          <div style={{ textAlign: "center", marginBottom: "20px" }}>
+          <div style={{ marginBottom: "20px", maxWidth: "900px", marginLeft: "auto", marginRight: "auto" }}>
+
             <button className="gradient-button" onClick={markAllAsRead}>
               Mark All as Read
             </button>
@@ -70,19 +70,19 @@ const Notifications = () => {
 
           <ul className="polls-list" style={{ maxWidth: "900px", margin: "0 auto" }}>
             {notifications.map((n) => (
-              <li key={n.id} className="poll-card">
-                <div className="poll-card-inner">
-                  <p className="poll-name">{n.title}</p>
-                  <p className="poll-description">{n.message}</p>
-                  <button
-                    className="gradient-button"
-                    style={{ backgroundColor: "#ff4d4f", marginTop: "10px" }}
-                    onClick={() => deleteNotification(n.id)}
-                  >
-                    🗑️ Delete
-                  </button>
-                </div>
-              </li>
+
+              <li key={n.id} className="poll-card notification-card">
+  <div className="notification-horizontal">
+    <div className="notification-text">
+      <p className="poll-name"> {n.title}</p>
+      <p className="poll-description">{n.message}</p>
+    </div>
+    <button className="icon-button" onClick={() => deleteNotification(n.id)}>
+      <FaTrash />
+    </button>
+  </div>
+</li>
+
             ))}
           </ul>
         </>

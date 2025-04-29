@@ -15,6 +15,7 @@ import {
   LabelList,
   Cell,
 } from "recharts";
+import {FaBars, FaTimes} from "react-icons/fa";
 
 const AdminDashboard = () => {
   const [user, setUser] = useState(null);
@@ -114,11 +115,8 @@ const AdminDashboard = () => {
         <SidebarLayout />
       </div>
 
-      <button
-        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-        className="collapse-btn"
-      >
-        {sidebarCollapsed ? "→" : "←"}
+      <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn">
+        {sidebarCollapsed ? <FaBars size={18} /> : <FaTimes size={18} />}
       </button>
 
 

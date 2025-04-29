@@ -54,15 +54,12 @@ const GroupJoinRequests = () => {
 
   return (
     <div style={{ width: "100%", marginBottom: "40px" }}>
-      <h2 className="dashboard-heading" style={{ textAlign: "center", marginBottom: "30px" }}>
-        Group Join Requests
-      </h2>
-
-      <div className="search-container" style={{ marginBottom: "30px", maxWidth: "600px", margin: "0 auto 30px" }}>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: "30px" }}>
         <select
           onChange={(e) => fetchRequests(e.target.value)}
           className="input-field"
           defaultValue=""
+          style={{ maxWidth: "600px", width: "100%" }}
         >
           <option value="" disabled>
             Select a group
@@ -74,6 +71,7 @@ const GroupJoinRequests = () => {
           ))}
         </select>
       </div>
+
 
       {requests.length === 0 ? (
         <p style={{ textAlign: "center", color: "#666" }}>No join requests found.</p>

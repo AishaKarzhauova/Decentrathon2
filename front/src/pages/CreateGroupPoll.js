@@ -4,6 +4,7 @@ import axios from "axios";
 import SidebarLayout from "../components/SidebarLayout";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
+import {FaBars, FaTimes} from "react-icons/fa";
 
 const CreateGroupPoll = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
@@ -84,12 +85,10 @@ const CreateGroupPoll = () => {
         <SidebarLayout />
       </div>
 
-      <button
-        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-        className="collapse-btn"
-      >
-        {sidebarCollapsed ? "→" : "←"}
+      <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn">
+        {sidebarCollapsed ? <FaBars size={18} /> : <FaTimes size={18} />}
       </button>
+
 
       <div className="main-content page-centered">
         <div className="poll-form-container">

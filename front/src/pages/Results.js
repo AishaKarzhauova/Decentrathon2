@@ -3,6 +3,7 @@ import axios from "axios";
 import SidebarLayout from "../components/SidebarLayout";
 import "../pages/Dashboard.css";
 import "./Results.css";
+import {FaBars, FaTimes} from "react-icons/fa";
 
 const Results = () => {
   const [results, setResults] = useState([]);
@@ -82,7 +83,7 @@ const Results = () => {
       </div>
 
       <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn">
-        {sidebarCollapsed ? "→" : "←"}
+        {sidebarCollapsed ? <FaBars size={18} /> : <FaTimes size={18} />}
       </button>
 
       <div className="main-content results-content">

@@ -6,6 +6,7 @@ import "../pages/Dashboard.css";
 import { FiCopy, FiCheck } from "react-icons/fi";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import "./CreatePoll.css";
+import {FaBars, FaTimes} from "react-icons/fa";
 
 const CreatePoll = () => {
   const [pollData, setPollData] = useState({
@@ -118,11 +119,8 @@ const handleSubmit = async (e) => {
         <SidebarLayout />
       </div>
 
-      <button
-        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-        className="collapse-btn"
-      >
-        {sidebarCollapsed ? "→" : "←"}
+      <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn">
+        {sidebarCollapsed ? <FaBars size={18} /> : <FaTimes size={18} />}
       </button>
 
       <div className="main-content">
