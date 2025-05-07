@@ -1,9 +1,12 @@
+
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from db import SessionLocal
+from schemas.notification_scheme import Notification
 from schemas.user_scheme import User
 from schemas.token_request_scheme import TokenRequest
 from utils.dependencies import get_current_user, is_admin
+from utils.email_sender import send_token_request_status_email
 from web3 import Web3
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -64,7 +67,7 @@ def request_tokens(user: dict = Depends(get_current_user), db: Session = Depends
     db.commit()
     db.refresh(token_request)
 
-    return {"message": "Запрос отправлен. Ожидайте одобрения администратором."}
+    return {"message": "Request sent. Wait for administrator approval."}
 
 
 @router.get("/token-requests")
@@ -95,9 +98,18 @@ def approve_request(request_id: int, user: dict = Depends(is_admin), db: Session
     tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
 
     request.status = "approved"
+    send_token_request_status_email(request.user.email, "approved")
+
+    new_notification = Notification(
+        user_id=request.user_id,
+        title="✅ Token Request Approved",
+        message="Your request for 10 AGA tokens has been approved and tokens have been sent!"
+    )
+    db.add(new_notification)
+
     db.commit()
 
-    return {"message": "Токены отправлены!", "tx_hash": web3.to_hex(tx_hash)}
+    return {"message": "Tokens sent!", "tx_hash": web3.to_hex(tx_hash)}
 
 
 @router.post("/reject-request/{request_id}")
@@ -107,6 +119,15 @@ def reject_request(request_id: int, user: dict = Depends(is_admin), db: Session 
         raise HTTPException(status_code=404, detail="Запрос не найден или уже обработан")
 
     request.status = "rejected"
+    send_token_request_status_email(request.user.email, "rejected")
+
+    new_notification = Notification(
+        user_id=request.user_id,
+        title="❌ Token Request Rejected",
+        message="Your request for 10 AGA tokens has been rejected by the administrator."
+    )
+    db.add(new_notification)
+
     db.commit()
 
-    return {"message": "Запрос отклонен"}
+    return {"message": "Request rejected"}

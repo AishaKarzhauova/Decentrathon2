@@ -76,7 +76,7 @@ def create_group(group: GroupCreate, user: dict = Depends(get_current_user), db:
     db.add(admin_member)
     db.commit()
 
-    return {"message": "Группа создана", "group_id": new_group.id}
+    return {"message": "Group created", "group_id": new_group.id}
 
 
 @router.post("/{group_id}/request-join")
@@ -87,12 +87,12 @@ def request_to_join(group_id: int, user: dict = Depends(get_current_user), db: S
 
     existing = db.query(GroupJoinRequest).filter_by(group_id=group_id, user_id=user_in_db.id).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Вы уже отправили запрос")
+        raise HTTPException(status_code=400, detail="You have already sent a request")
 
     request = GroupJoinRequest(group_id=group_id, user_id=user_in_db.id)
     db.add(request)
     db.commit()
-    return {"message": "Запрос на вступление отправлен"}
+    return {"message": "Request for membership sent"}
 
 
 @router.get("/{group_id}/join-requests")
@@ -103,10 +103,25 @@ def get_join_requests(group_id: int, user: dict = Depends(get_current_user), db:
 
     group = db.query(Group).filter_by(id=group_id).first()
     if not group or group.owner_id != user_in_db.id:
-        raise HTTPException(status_code=403, detail="Нет доступа")
+        raise HTTPException(status_code=403, detail="No access")
 
-    requests = db.query(GroupJoinRequest).filter_by(group_id=group_id, accepted=False).all()
-    return [{"request_id": r.id, "user_id": r.user_id} for r in requests]
+    requests = (
+        db.query(GroupJoinRequest, User)
+        .join(User, GroupJoinRequest.user_id == User.id)
+        .filter(GroupJoinRequest.group_id == group_id, GroupJoinRequest.accepted == False)
+        .all()
+    )
+
+    return [
+        {
+            "request_id": req.id,
+            "user_id": user.id,
+            "nickname": user.nickname,
+            "first_name": user.first_name,
+            "last_name": user.last_name
+        }
+        for req, user in requests
+    ]
 
 
 @router.post("/{group_id}/accept/{request_id}")
@@ -117,11 +132,11 @@ def accept_join_request(group_id: int, request_id: int, user: dict = Depends(get
 
     group = db.query(Group).filter_by(id=group_id).first()
     if not group or group.owner_id != user_in_db.id:
-        raise HTTPException(status_code=403, detail="Нет доступа")
+        raise HTTPException(status_code=403, detail="No access")
 
     request = db.query(GroupJoinRequest).filter_by(id=request_id, group_id=group_id).first()
     if not request:
-        raise HTTPException(status_code=404, detail="Запрос не найден")
+        raise HTTPException(status_code=404, detail="Request not found")
 
     request.accepted = True
     db.commit()
@@ -129,7 +144,7 @@ def accept_join_request(group_id: int, request_id: int, user: dict = Depends(get
     new_member = GroupMember(group_id=group_id, user_id=request.user_id)
     db.add(new_member)
     db.commit()
-    return {"message": "Участник добавлен в группу"}
+    return {"message": "Member added to group"}
 
 
 @router.get("/my")
@@ -146,7 +161,7 @@ def my_groups(user: dict = Depends(get_current_user), db: Session = Depends(get_
 def group_members(group_id: int, user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     group = db.query(Group).filter(Group.id == group_id).first()
     if not group:
-        raise HTTPException(status_code=404, detail="Группа не найдена")
+        raise HTTPException(status_code=404, detail="Group not found")
 
     members = db.query(GroupMember).filter_by(group_id=group_id).all()
     return [
@@ -162,7 +177,7 @@ def create_group_poll(data: PollWithGroupCreate, user: dict = Depends(get_curren
 
     membership = db.query(GroupMember).filter_by(group_id=data.group_id, user_id=user_in_db.id).first()
     if not membership:
-        raise HTTPException(status_code=403, detail="Вы не состоите в группе")
+        raise HTTPException(status_code=403, detail="You are not a member of the group")
 
     new_proposal = ProposedPoll(
         name=data.name,
@@ -178,13 +193,38 @@ def create_group_poll(data: PollWithGroupCreate, user: dict = Depends(get_curren
     db.commit()
     db.refresh(new_proposal)
 
-    return {"message": "Групповое голосование предложено", "proposal_id": new_proposal.id}
+    return {"message": "Group voting proposed", "proposal_id": new_proposal.id}
 
 
 @router.get("/all")
-def all_groups(db: Session = Depends(get_db)):
+def all_groups(user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
+    user_in_db = db.query(User).filter_by(wallet_address=user["wallet_address"]).first()
+    if not user_in_db:
+        raise HTTPException(status_code=404, detail="User not found")
+
     groups = db.query(Group).all()
-    return [{"id": g.id, "name": g.name, "description": g.description} for g in groups]
+    result = []
+
+    for g in groups:
+        # Проверяем является ли пользователь владельцем группы
+        is_owner = g.owner_id == user_in_db.id
+
+        # Проверяем является ли пользователь участником группы
+        is_member = db.query(GroupMember).filter_by(group_id=g.id, user_id=user_in_db.id).first() is not None
+
+        # Проверяем отправил ли пользователь заявку на вступление
+        requested_join = db.query(GroupJoinRequest).filter_by(group_id=g.id, user_id=user_in_db.id, accepted=False).first() is not None
+
+        result.append({
+            "id": g.id,
+            "name": g.name,
+            "description": g.description,
+            "is_owner": is_owner,
+            "is_member": is_member,
+            "requested_join": requested_join,
+        })
+
+    return result
 
 
 @router.get("/my-requests")
@@ -241,12 +281,12 @@ def leave_group(group_id: int, user: dict = Depends(get_current_user), db: Sessi
 def get_group_info(group_id: int, db: Session = Depends(get_db)):
     group = db.query(Group).filter(Group.id == group_id).first()
     if not group:
-        raise HTTPException(status_code=404, detail="Группа не найдена")
+        raise HTTPException(status_code=404, detail="Group not found")
 
     admin = db.query(User).filter(User.id == group.owner_id).first()
 
     if not admin:
-        raise HTTPException(status_code=404, detail="Администратор группы не найден")
+        raise HTTPException(status_code=404, detail="Group administrator not found")
 
     return {
         "id": group.id,
@@ -265,7 +305,7 @@ from schemas.user_scheme import User  # ✅ убедись, что импорт�
 def group_members(group_id: int, user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     group = db.query(Group).filter(Group.id == group_id).first()
     if not group:
-        raise HTTPException(status_code=404, detail="Группа не найдена")
+        raise HTTPException(status_code=404, detail="Group not found")
 
     members = db.query(GroupMember, User).join(User, GroupMember.user_id == User.id).filter(GroupMember.group_id == group_id).all()
 

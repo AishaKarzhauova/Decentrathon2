@@ -22,7 +22,8 @@ const Dashboard = () => {
   const [polls, setPolls] = useState([]);
   const [searchActive, setSearchActive] = useState(false);
   const [latestPolls, setLatestPolls] = useState([]);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth <= 768);
+
   const [mostVotedPoll, setMostVotedPoll] = useState(null);
   const [allOpenPolls, setAllOpenPolls] = useState([]);
   const [dummyData, setDummyData] = useState([]);
@@ -36,6 +37,17 @@ const Dashboard = () => {
     fetchOpenPolls();
     fetchStatistics();
   }, []);
+
+  useEffect(() => {
+  const handleResize = () => {
+    setSidebarCollapsed(window.innerWidth <= 768);
+  };
+
+  window.addEventListener("resize", handleResize);
+
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
+
 
   const fetchOpenPolls = async () => {
     try {

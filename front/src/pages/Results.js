@@ -10,7 +10,7 @@ const Results = () => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth <= 768);
   const [expandedRows, setExpandedRows] = useState({});
 
   const toggleExpand = (pollName, type) => {
@@ -30,6 +30,17 @@ const Results = () => {
     document.head.appendChild(link);
     return () => document.head.removeChild(link);
   }, []);
+
+  useEffect(() => {
+  const handleResize = () => {
+    setSidebarCollapsed(window.innerWidth <= 768);
+  };
+
+  window.addEventListener("resize", handleResize);
+
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
+
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -117,49 +128,39 @@ const Results = () => {
                     <th>Results</th>
                   </tr>
                 </thead>
+                <tbody>
+                  {Object.entries(
+                    filteredResults.reduce((acc, curr) => {
+                      if (!acc[curr.poll]) {
+                        acc[curr.poll] = {
+                          description: curr.description,
+                          candidates: [],
+                        };
+                      }
+                      acc[curr.poll].candidates.push({ candidate: curr.candidate, votes: curr.votes });
+                      return acc;
+                    }, {})
+                  ).map(([pollName, pollData], idx) => (
+                    <tr key={idx}>
+                      <td>
+                        <div className="results-card-title">{pollName}</div>
+                      </td>
+                      <td>{pollData.description}</td>
+                      <td>
+                        {pollData.candidates.map((c, i) => (
+                          <div key={i}>{c.candidate}</div>
+                        ))}
+                      </td>
+                      <td>
+                        {pollData.candidates.map((c, i) => (
+                          <div key={i}>{c.votes} vote{c.votes !== 1 ? "s" : ""}</div>
+                        ))}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
               </table>
 
-              <div className="results-card-list">
-                {Object.entries(
-                  filteredResults.reduce((acc, curr) => {
-                    if (!acc[curr.poll]) {
-                      acc[curr.poll] = {
-                        description: curr.description,
-                        candidates: [],
-                      };
-                    }
-                    acc[curr.poll].candidates.push({ candidate: curr.candidate, votes: curr.votes });
-                    return acc;
-                  }, {})
-                ).map(([pollName, pollData], idx) => (
-                  <div key={idx} className="results-card">
-                    <div
-                      onClick={() => toggleExpand(pollName, "name")}
-                      className={`results-card-title ${expandedRows[pollName]?.name ? "expanded" : "collapsed"}`}
-                      title={!expandedRows[pollName]?.name ? pollName : ""}
-                    >
-                      {pollName}
-                    </div>
-                    <div
-                      onClick={() => toggleExpand(pollName, "desc")}
-                      className={`results-card-desc ${expandedRows[pollName]?.desc ? "expanded" : "collapsed"}`}
-                      title={!expandedRows[pollName]?.desc ? pollData.description : ""}
-                    >
-                      {pollData.description}
-                    </div>
-                    <div className="results-card-candidates">
-                      {pollData.candidates.map((c, i) => (
-                        <span key={i}>{c.candidate}</span>
-                      ))}
-                    </div>
-                    <div className="results-card-votes">
-                      {pollData.candidates.map((c, i) => (
-                        <span key={i}>{c.votes} vote{c.votes !== 1 ? "s" : ""}</span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
         </div>

@@ -17,7 +17,7 @@ const CreatePoll = () => {
   const [message, setMessage] = useState("");
   const [user, setUser] = useState(null);
   const [agaBalance, setAgaBalance] = useState(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth <= 768);
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 
@@ -52,6 +52,17 @@ const CreatePoll = () => {
         navigate("/");
       });
   }, [navigate]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setSidebarCollapsed(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
 
   const handleChange = (e, index) => {
     const newCandidates = [...pollData.candidates];

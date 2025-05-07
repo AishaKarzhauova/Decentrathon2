@@ -10,11 +10,23 @@ import {FaBars, FaTimes} from "react-icons/fa";
 const ProposalsList = () => {
   const [proposals, setProposals] = useState([]);
   const [message, setMessage] = useState("");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth <= 768);
+
 
   useEffect(() => {
     fetchProposals();
   }, []);
+
+  useEffect(() => {
+  const handleResize = () => {
+    setSidebarCollapsed(window.innerWidth <= 768);
+  };
+
+  window.addEventListener("resize", handleResize);
+
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
+
 
   async function fetchProposals() {
     try {

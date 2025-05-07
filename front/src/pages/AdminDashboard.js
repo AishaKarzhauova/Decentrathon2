@@ -26,7 +26,8 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth <= 768);
+
 
   const filteredPolls = polls.filter((poll) =>
     poll.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -37,6 +38,16 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchPolls();
   }, []);
+
+  useEffect(() => {
+  const handleResize = () => {
+    setSidebarCollapsed(window.innerWidth <= 768);
+  };
+
+  window.addEventListener("resize", handleResize);
+
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
 
   const chartData = [
     { name: "Active Polls", value: activePolls.length },

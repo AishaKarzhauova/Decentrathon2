@@ -140,11 +140,11 @@ const CreateGroupPoll = () => {
                 />
                 {formData.candidates.length > 2 && (
                   <button
-                    type="button"
-                    onClick={() => removeCandidate(index)}
-                    style={{ background: "red", color: "white", border: "none", borderRadius: "8px", padding: "8px" }}
+                      type="button"
+                      onClick={() => removeCandidate(index)}
+                      className="remove-candidate-btn"
                   >
-                    X
+                    −
                   </button>
                 )}
               </div>
@@ -157,7 +157,7 @@ const CreateGroupPoll = () => {
                 className="gradient-button"
                 style={{ marginBottom: "20px" }}
               >
-                ➕ Add Candidate
+                + Add Candidate
               </button>
             )}
 

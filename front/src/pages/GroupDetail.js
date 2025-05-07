@@ -3,34 +3,45 @@ import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import SidebarLayout from "../components/SidebarLayout";
 import "./Dashboard.css";
-import {FaBars, FaTimes} from "react-icons/fa";
-import { FaUserMinus } from "react-icons/fa";
+import { FaBars, FaTimes, FaUserMinus } from "react-icons/fa";
 
 const GroupDetail = () => {
   const { groupId } = useParams();
   const [groupInfo, setGroupInfo] = useState(null);
   const [members, setMembers] = useState([]);
   const [polls, setPolls] = useState([]);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth <= 768);
+
   const [message, setMessage] = useState("");
-  const navigate = useNavigate();
-  const [currentUserId, setCurrentUserId] = useState(null);
-  const [isGroupAdmin, setIsGroupAdmin] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [isGroupAdmin, setIsGroupAdmin] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchGroupData();
   }, [groupId]);
 
+  useEffect(() => {
+  const handleResize = () => {
+    setSidebarCollapsed(window.innerWidth <= 768);
+  };
+
+  window.addEventListener("resize", handleResize);
+
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
+
+
   const fetchGroupData = async () => {
     try {
       const token = localStorage.getItem("token");
 
-      // Fetch current user
       const userRes = await axios.get("http://127.0.0.1:8000/user/me", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  setCurrentUser(userRes.data);
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCurrentUser(userRes.data);
 
       const groupsRes = await axios.get("http://127.0.0.1:8000/groups/all", {
         headers: { Authorization: `Bearer ${token}` },
@@ -42,30 +53,21 @@ const GroupDetail = () => {
       }
       setGroupInfo(foundGroup);
 
-      let fetchedMembers = [];
-
-  try {
-    const res = await axios.get(`http://127.0.0.1:8000/groups/${groupId}/members`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    fetchedMembers = res.data;
-    setMembers(fetchedMembers);
-
-  } catch (err) {
-    setMessage("Failed to fetch group members.");
-    return;
-  }
-
-  // Now we can safely check admin status
-  const isAdmin = fetchedMembers.some(
-    (m) => m.user_id === userRes.data.id && m.role === "admin"
-  );
-  setIsGroupAdmin(isAdmin);
-
-
-      const pollsRes = await axios.get(`http://127.0.0.1:8000/polls/group/${groupId}/polls`, {
+      const membersRes = await axios.get(`http://127.0.0.1:8000/groups/${groupId}/members`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      setMembers(membersRes.data);
+
+      const isAdmin = membersRes.data.some(
+        (m) => m.user_id === userRes.data.id && m.role === "admin"
+      );
+      setIsGroupAdmin(isAdmin);
+
+      const pollsRes = await axios.get(
+        `http://127.0.0.1:8000/polls/group/${groupId}/polls`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setPolls(pollsRes.data);
     } catch (error) {
       console.error(error);
@@ -73,14 +75,13 @@ const GroupDetail = () => {
     }
   };
 
-// const currentMember = members.find((m) => m.user_id === currentUserId);
-
   const kickMember = async (userId) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://127.0.0.1:8000/groups/${groupId}/kick/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(
+        `http://127.0.0.1:8000/groups/${groupId}/kick/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setMembers((prev) => prev.filter((m) => m.user_id !== userId));
       setMessage("✅ Member kicked!");
       setTimeout(() => setMessage(""), 3000);
@@ -89,13 +90,27 @@ const GroupDetail = () => {
     }
   };
 
+  // Filter logic
+  const filteredMembers = members.filter((member) =>
+    `${member.nickname} ${member.first_name} ${member.last_name}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
+  const filteredPolls = polls.filter((poll) =>
+    poll.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="dashboard-container montserrat-font">
       <div className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
         <SidebarLayout />
       </div>
 
-      <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="collapse-btn">
+      <button
+        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+        className="collapse-btn"
+      >
         {sidebarCollapsed ? <FaBars size={18} /> : <FaTimes size={18} />}
       </button>
 
@@ -109,16 +124,28 @@ const GroupDetail = () => {
               {groupInfo.description || "No description provided."}
             </p>
 
+            {/* 🔍 Unified Search Bar */}
+            <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: "20px" }}>
+              <input
+                type="text"
+                placeholder="Search group member or poll by name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  padding: "10px 16px",
+                  fontSize: "16px",
+                  borderRadius: "8px",
+                  border: "1px solid #ccc",
+                  maxWidth: "400px",
+                  width: "100%",
+                }}
+              />
+            </div>
+
             <h3 className="dashboard-heading">Group Members</h3>
             <ul className="polls-list">
-              {members.map((member) => {
-                console.log("CHECK:", {
-                  currentUserId,
-                  viewing: member.user_id,
-                  role: members.find((m) => m.user_id === currentUserId)?.role,
-                });
-                const currentMember = members.find((m) => m.user_id === currentUser?.id);
-                return (
+              {filteredMembers.length > 0 ? (
+                filteredMembers.map((member) => (
                   <li key={member.user_id} className="poll-card">
                     <div className="poll-card-inner">
                       <p className="poll-name">
@@ -126,7 +153,7 @@ const GroupDetail = () => {
                         {member.role === "admin" ? "(Admin)" : ""}
                       </p>
 
-                      {member.role !== "admin" && (
+                      {isGroupAdmin && member.role !== "admin" && (
                         <button
                           className="gradient-button danger"
                           onClick={() => kickMember(member.user_id)}
@@ -137,28 +164,36 @@ const GroupDetail = () => {
                       )}
                     </div>
                   </li>
-                );
-              })}
+                ))
+              ) : (
+                <p style={{ color: "#888", textAlign: "center" }}>No matching members found.</p>
+              )}
             </ul>
 
-
-
-            <h3 className="dashboard-heading" style={{ marginTop: "40px" }}>Group Polls</h3>
+            <h3 className="dashboard-heading" style={{ marginTop: "40px" }}>
+              Group Polls
+            </h3>
             <ul className="polls-list">
-              {polls.length > 0 ? polls.map((poll) => (
-                <li key={poll.id} className="poll-card">
-                  <div className="poll-card-inner">
-                    <p
-                      className="poll-name"
-                      style={{ cursor: "pointer", color: "#6e8efb", textDecoration: "underline" }}
-                      onClick={() => navigate(`/vote/${poll.id}`)}
-                    >
-                      {poll.name}
-                    </p>
-                  </div>
-                </li>
-              )) : (
-                <p>No polls created in this group yet.</p>
+              {filteredPolls.length > 0 ? (
+                filteredPolls.map((poll) => (
+                  <li key={poll.id} className="poll-card">
+                    <div className="poll-card-inner">
+                      <p
+                        className="poll-name"
+                        style={{
+                          cursor: "pointer",
+                          color: "#6e8efb",
+                          textDecoration: "underline",
+                        }}
+                        onClick={() => navigate(`/vote/${poll.id}`)}
+                      >
+                        {poll.name}
+                      </p>
+                    </div>
+                  </li>
+                ))
+              ) : (
+                <p style={{ color: "#888", textAlign: "center" }}>No matching polls found.</p>
               )}
             </ul>
           </>

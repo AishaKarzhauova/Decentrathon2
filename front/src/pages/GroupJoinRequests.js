@@ -54,12 +54,15 @@ const GroupJoinRequests = () => {
 
   return (
     <div style={{ width: "100%", marginBottom: "40px" }}>
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: "30px" }}>
+      <h2 className="dashboard-heading" style={{ textAlign: "center", marginBottom: "30px" }}>
+        Group Join Requests
+      </h2>
+
+      <div className="search-container" style={{ marginBottom: "30px", maxWidth: "600px", margin: "0 auto 30px" }}>
         <select
           onChange={(e) => fetchRequests(e.target.value)}
           className="input-field"
           defaultValue=""
-          style={{ maxWidth: "600px", width: "100%" }}
         >
           <option value="" disabled>
             Select a group
@@ -72,7 +75,6 @@ const GroupJoinRequests = () => {
         </select>
       </div>
 
-
       {requests.length === 0 ? (
         <p style={{ textAlign: "center", color: "#666" }}>No join requests found.</p>
       ) : (
@@ -80,7 +82,10 @@ const GroupJoinRequests = () => {
           {requests.map((req) => (
             <li key={req.request_id} className="poll-card">
               <div className="poll-card-inner">
-                <p className="poll-name">User ID: {req.user_id}</p>
+                <p className="poll-name">
+  👤                   {req.nickname} ({req.first_name} {req.last_name})
+                  </p>
+
                 <button
                   className="gradient-button"
                   onClick={() => acceptRequest(selectedGroupId, req.request_id)}

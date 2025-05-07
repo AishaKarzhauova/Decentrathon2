@@ -30,7 +30,7 @@ const Navbar = () => {
       <ul className="nav-links">
           <li><a href="#how">How It Works</a></li>
           <li><a href="#usecases">Use Cases</a></li>
-          <li><a href="#register">Registarion instruction</a></li>
+          <li><a href="#register">Registration instruction</a></li>
           <li><a href="#contact">Contact</a></li>
         </ul>
       <div className="auth-links">

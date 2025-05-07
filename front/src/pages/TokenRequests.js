@@ -10,11 +10,23 @@ const TokenRequests = () => {
   const [user, setUser] = useState(null);
   const [agaBalance, setAgaBalance] = useState(null);
   const [showUserInfo, setShowUserInfo] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth <= 768);
+
 
   useEffect(() => {
     fetchRequests();
   }, []);
+
+  useEffect(() => {
+  const handleResize = () => {
+    setSidebarCollapsed(window.innerWidth <= 768);
+  };
+
+  window.addEventListener("resize", handleResize);
+
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
+
 
   const fetchRequests = async () => {
     try {
